@@ -2,6 +2,8 @@ import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { isAuthenticated, getCurrentUser, clearAuthData } from '../api';
 import toast from 'react-hot-toast';
+import logo from '../assets/logo.jpg';
+import './Header.css';
 
 function Header() {
     const navigate = useNavigate();
@@ -19,6 +21,8 @@ function Header() {
         <header className="header">
             <div className="header-container">
                 <div className="logo">
+                    {/* Logo Image - This is what was missing */}
+                    <img src={logo} alt="Railway Logo" className="logo-image" />
                     <Link to="/">
                         <span className="train-icon">🚂</span>
                         <span className="logo-text">Railway System</span>
@@ -47,6 +51,7 @@ function Header() {
                     {isLoggedIn ? (
                         <div className="user-menu">
                             <span className="user-name">👤 {user?.firstName}</span>
+                            {isAdmin && <span className="admin-badge">Admin</span>}
                             <button onClick={handleLogout} className="logout-btn">Logout</button>
                         </div>
                     ) : (

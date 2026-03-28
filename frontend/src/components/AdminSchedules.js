@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { getCurrentUser } from '../api';
 import toast from 'react-hot-toast';
 import { FaEdit, FaTrash, FaPlus, FaTrain, FaMapMarkerAlt, FaClock, FaMoneyBillWave } from 'react-icons/fa';
 import './AdminSchedules.css';
@@ -38,10 +37,11 @@ function AdminSchedules() {
                 axios.get('http://localhost:5000/api/stations')
             ]);
             
-            setSchedules(schedulesRes.data.data);
-            setTrains(trainsRes.data.data);
-            setStations(stationsRes.data.data);
+            setSchedules(schedulesRes.data.data || []);
+            setTrains(trainsRes.data.data || []);
+            setStations(stationsRes.data.data || []);
         } catch (error) {
+            console.error('Fetch error:', error);
             toast.error('Failed to fetch data');
         } finally {
             setLoading(false);
@@ -58,20 +58,33 @@ function AdminSchedules() {
         const token = localStorage.getItem('token');
         const headers = { Authorization: `Bearer ${token}` };
         
+        // Format dates properly for SQL Server
+        const departureTimeFormatted = new Date(formData.departureTime).toISOString().slice(0, 19).replace('T', ' ');
+        const arrivalTimeFormatted = new Date(formData.arrivalTime).toISOString().slice(0, 19).replace('T', ' ');
+        
+        const payload = {
+            trainId: parseInt(formData.trainId),
+            departureStationId: parseInt(formData.departureStationId),
+            arrivalStationId: parseInt(formData.arrivalStationId),
+            departureTime: departureTimeFormatted,
+            arrivalTime: arrivalTimeFormatted,
+            ticketPrice: parseFloat(formData.ticketPrice),
+            availableSeats: parseInt(formData.availableSeats),
+            status: formData.status
+        };
+        
         try {
             if (editingSchedule) {
-                // Update existing schedule
                 await axios.put(
                     `http://localhost:5000/api/admin/schedules/${editingSchedule.ScheduleID}`,
-                    formData,
+                    payload,
                     { headers }
                 );
                 toast.success('Schedule updated successfully!');
             } else {
-                // Add new schedule
                 await axios.post(
                     'http://localhost:5000/api/admin/schedules',
-                    formData,
+                    payload,
                     { headers }
                 );
                 toast.success('Schedule added successfully!');
@@ -91,21 +104,29 @@ function AdminSchedules() {
             });
             fetchData();
         } catch (error) {
+            console.error('Submit error:', error);
             toast.error(error.response?.data?.message || 'Operation failed');
         }
     };
 
     const handleEdit = (schedule) => {
+        // Format date for datetime-local input (YYYY-MM-DDThh:mm)
+        const formatDateForInput = (dateString) => {
+            if (!dateString) return '';
+            const date = new Date(dateString);
+            return date.toISOString().slice(0, 16);
+        };
+        
         setEditingSchedule(schedule);
         setFormData({
             trainId: schedule.TrainID,
             departureStationId: schedule.DepartureStationID,
             arrivalStationId: schedule.ArrivalStationID,
-            departureTime: schedule.DepartureTime.slice(0, 16),
-            arrivalTime: schedule.ArrivalTime.slice(0, 16),
+            departureTime: formatDateForInput(schedule.DepartureTime),
+            arrivalTime: formatDateForInput(schedule.ArrivalTime),
             ticketPrice: schedule.TicketPrice,
             availableSeats: schedule.AvailableSeats,
-            status: schedule.Status
+            status: schedule.Status || 'Scheduled'
         });
         setShowForm(true);
     };
@@ -121,6 +142,7 @@ function AdminSchedules() {
             toast.success('Schedule deleted successfully!');
             fetchData();
         } catch (error) {
+            console.error('Delete error:', error);
             toast.error(error.response?.data?.message || 'Delete failed');
         }
     };
@@ -132,7 +154,7 @@ function AdminSchedules() {
             Cancelled: 'status-cancelled',
             Completed: 'status-completed'
         };
-        return <span className={`status-badge ${statusClass[status]}`}>{status}</span>;
+        return <span className={`status-badge ${statusClass[status] || 'status-scheduled'}`}>{status || 'Scheduled'}</span>;
     };
 
     if (loading) return <div className="loading">Loading schedules...</div>;
@@ -155,7 +177,7 @@ function AdminSchedules() {
                         <h2>{editingSchedule ? 'Edit Schedule' : 'Add New Schedule'}</h2>
                         <form onSubmit={handleSubmit}>
                             <div className="form-group">
-                                <label>Train</label>
+                                <label>Train *</label>
                                 <select name="trainId" value={formData.trainId} onChange={handleInputChange} required>
                                     <option value="">Select Train</option>
                                     {trains.map(train => (
@@ -168,7 +190,7 @@ function AdminSchedules() {
 
                             <div className="form-row">
                                 <div className="form-group">
-                                    <label>Departure Station</label>
+                                    <label>Departure Station *</label>
                                     <select name="departureStationId" value={formData.departureStationId} onChange={handleInputChange} required>
                                         <option value="">Select Station</option>
                                         {stations.map(station => (
@@ -180,7 +202,7 @@ function AdminSchedules() {
                                 </div>
 
                                 <div className="form-group">
-                                    <label>Arrival Station</label>
+                                    <label>Arrival Station *</label>
                                     <select name="arrivalStationId" value={formData.arrivalStationId} onChange={handleInputChange} required>
                                         <option value="">Select Station</option>
                                         {stations.map(station => (
@@ -194,25 +216,52 @@ function AdminSchedules() {
 
                             <div className="form-row">
                                 <div className="form-group">
-                                    <label>Departure Time</label>
-                                    <input type="datetime-local" name="departureTime" value={formData.departureTime} onChange={handleInputChange} required />
+                                    <label>Departure Time *</label>
+                                    <input 
+                                        type="datetime-local" 
+                                        name="departureTime" 
+                                        value={formData.departureTime} 
+                                        onChange={handleInputChange} 
+                                        required 
+                                    />
                                 </div>
 
                                 <div className="form-group">
-                                    <label>Arrival Time</label>
-                                    <input type="datetime-local" name="arrivalTime" value={formData.arrivalTime} onChange={handleInputChange} required />
+                                    <label>Arrival Time *</label>
+                                    <input 
+                                        type="datetime-local" 
+                                        name="arrivalTime" 
+                                        value={formData.arrivalTime} 
+                                        onChange={handleInputChange} 
+                                        required 
+                                    />
                                 </div>
                             </div>
 
                             <div className="form-row">
                                 <div className="form-group">
-                                    <label>Ticket Price (Rs.)</label>
-                                    <input type="number" name="ticketPrice" value={formData.ticketPrice} onChange={handleInputChange} required min="0" step="0.01" />
+                                    <label>Ticket Price (Rs.) *</label>
+                                    <input 
+                                        type="number" 
+                                        name="ticketPrice" 
+                                        value={formData.ticketPrice} 
+                                        onChange={handleInputChange} 
+                                        required 
+                                        min="0" 
+                                        step="0.01" 
+                                    />
                                 </div>
 
                                 <div className="form-group">
-                                    <label>Available Seats</label>
-                                    <input type="number" name="availableSeats" value={formData.availableSeats} onChange={handleInputChange} required min="0" />
+                                    <label>Available Seats *</label>
+                                    <input 
+                                        type="number" 
+                                        name="availableSeats" 
+                                        value={formData.availableSeats} 
+                                        onChange={handleInputChange} 
+                                        required 
+                                        min="0" 
+                                    />
                                 </div>
                             </div>
 
@@ -230,8 +279,12 @@ function AdminSchedules() {
                                 <button type="button" className="cancel-btn" onClick={() => {
                                     setShowForm(false);
                                     setEditingSchedule(null);
-                                }}>Cancel</button>
-                                <button type="submit" className="submit-btn">Save Schedule</button>
+                                }}>
+                                    Cancel
+                                </button>
+                                <button type="submit" className="submit-btn">
+                                    Save Schedule
+                                </button>
                             </div>
                         </form>
                     </div>
@@ -239,73 +292,77 @@ function AdminSchedules() {
             )}
 
             <div className="schedules-table-container">
-                <table className="schedules-table">
-                    <thead>
-                        <tr>
-                            <th>Train</th>
-                            <th>Route</th>
-                            <th>Departure</th>
-                            <th>Arrival</th>
-                            <th>Price</th>
-                            <th>Seats</th>
-                            <th>Status</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {schedules.map(schedule => (
-                            <tr key={schedule.ScheduleID}>
-                                <td>
-                                    <div className="train-info">
-                                        <FaTrain className="train-icon" />
-                                        <div>
-                                            <strong>{schedule.TrainName}</strong>
-                                            <br />
-                                            <small>{schedule.TrainNumber}</small>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td>
-                                    <div className="route-info">
-                                        <FaMapMarkerAlt className="departure-icon" />
-                                        {schedule.DepartureStation}
-                                        <span className="arrow">→</span>
-                                        <FaMapMarkerAlt className="arrival-icon" />
-                                        {schedule.ArrivalStation}
-                                    </div>
-                                </td>
-                                <td>
-                                    <div className="time-info">
-                                        <FaClock />
-                                        {new Date(schedule.DepartureTime).toLocaleString()}
-                                    </div>
-                                </td>
-                                <td>
-                                    <div className="time-info">
-                                        <FaClock />
-                                        {new Date(schedule.ArrivalTime).toLocaleString()}
-                                    </div>
-                                </td>
-                                <td>
-                                    <div className="price-info">
-                                        <FaMoneyBillWave />
-                                        Rs. {schedule.TicketPrice}
-                                    </div>
-                                </td>
-                                <td className="text-center">{schedule.AvailableSeats}</td>
-                                <td>{getStatusBadge(schedule.Status)}</td>
-                                <td className="actions">
-                                    <button className="edit-btn" onClick={() => handleEdit(schedule)}>
-                                        <FaEdit />
-                                    </button>
-                                    <button className="delete-btn" onClick={() => handleDelete(schedule.ScheduleID)}>
-                                        <FaTrash />
-                                    </button>
-                                </td>
+                {schedules.length === 0 ? (
+                    <div className="no-data">No schedules found. Click "Add New Schedule" to create one.</div>
+                ) : (
+                    <table className="schedules-table">
+                        <thead>
+                            <tr>
+                                <th>Train</th>
+                                <th>Route</th>
+                                <th>Departure</th>
+                                <th>Arrival</th>
+                                <th>Price</th>
+                                <th>Seats</th>
+                                <th>Status</th>
+                                <th>Actions</th>
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            {schedules.map(schedule => (
+                                <tr key={schedule.ScheduleID}>
+                                    <td>
+                                        <div className="train-info">
+                                            <FaTrain className="train-icon" />
+                                            <div>
+                                                <strong>{schedule.TrainName}</strong>
+                                                <br />
+                                                <small>{schedule.TrainNumber}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div className="route-info">
+                                            <FaMapMarkerAlt className="departure-icon" />
+                                            {schedule.DepartureStation}
+                                            <span className="arrow">→</span>
+                                            <FaMapMarkerAlt className="arrival-icon" />
+                                            {schedule.ArrivalStation}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div className="time-info">
+                                            <FaClock />
+                                            {new Date(schedule.DepartureTime).toLocaleString()}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div className="time-info">
+                                            <FaClock />
+                                            {new Date(schedule.ArrivalTime).toLocaleString()}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div className="price-info">
+                                            <FaMoneyBillWave />
+                                            Rs. {schedule.TicketPrice}
+                                        </div>
+                                    </td>
+                                    <td className="text-center">{schedule.AvailableSeats}</td>
+                                    <td>{getStatusBadge(schedule.Status)}</td>
+                                    <td className="actions">
+                                        <button className="edit-btn" onClick={() => handleEdit(schedule)}>
+                                            <FaEdit />
+                                        </button>
+                                        <button className="delete-btn" onClick={() => handleDelete(schedule.ScheduleID)}>
+                                            <FaTrash />
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                )}
             </div>
         </div>
     );

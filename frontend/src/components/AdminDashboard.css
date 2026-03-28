@@ -1,0 +1,91 @@
+.admin-dashboard {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.admin-dashboard h1 {
+    font-size: 2rem;
+    color: #1f2937;
+    margin-bottom: 1rem;
+}
+
+.admin-dashboard h2 {
+    font-size: 1.5rem;
+    color: #374151;
+    margin: 1.5rem 0 1rem;
+}
+
+.admin-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.admin-table th,
+.admin-table td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.admin-table th {
+    background: #f3f4f6;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.admin-table tr:hover {
+    background: #f9fafb;
+}
+
+.role-badge {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.role-badge.admin {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.role-badge.user {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+/* Add to existing AdminDashboard.css */
+.booking-status {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+.booking-status.confirmed {
+    background: #dbeafe;
+    color: #1e40af;
+}
+.booking-status.cancelled {
+    background: #fee2e2;
+    color: #991b1b;
+}
+.booking-status.completed {
+    background: #dcfce7;
+    color: #166534;
+}
+.loading, .error {
+    text-align: center;
+    padding: 2rem;
+    font-size: 1.2rem;
+    color: #6b7280;
+}
+.error {
+    color: #ef4444;
+}

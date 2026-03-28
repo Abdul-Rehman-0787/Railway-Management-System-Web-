@@ -1,0 +1,97 @@
+.catalogue-container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.catalogue-container h1 {
+    font-size: 2rem;
+    color: #1f2937;
+    margin-bottom: 0.5rem;
+}
+
+.catalogue-container > p {
+    color: #6b7280;
+    margin-bottom: 2rem;
+}
+
+.catalogue-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 1.5rem;
+}
+
+.catalogue-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    transition: transform 0.3s;
+}
+
+.catalogue-card:hover {
+    transform: translateY(-4px);
+}
+
+.catalogue-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.catalogue-icon {
+    font-size: 1.5rem;
+    color: #2a5298;
+}
+
+.catalogue-header h3 {
+    margin: 0;
+    font-size: 1.2rem;
+    color: #1f2937;
+}
+
+.train-info {
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.train-name {
+    font-weight: 600;
+    color: #2a5298;
+    margin-right: 0.5rem;
+}
+
+.train-number {
+    font-size: 0.8rem;
+    color: #6b7280;
+}
+
+.description {
+    color: #4b5563;
+    line-height: 1.5;
+    margin-bottom: 1rem;
+}
+
+.amenities {
+    margin-top: 1rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid #e5e7eb;
+}
+
+.amenities strong {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-size: 0.85rem;
+    color: #6b7280;
+}
+
+.amenities-icons {
+    display: flex;
+    gap: 0.75rem;
+}
+
+.amenity-icon {
+    font-size: 1.2rem;
+    color: #10b981;
+}

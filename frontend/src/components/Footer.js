@@ -1,4 +1,5 @@
 import React from 'react';
+import './Footer.css';
 
 function Footer() {
     return (
@@ -6,13 +7,14 @@ function Footer() {
             <div className="footer-container">
                 <div className="footer-section">
                     <h3>Railway Management System</h3>
-                    <p>Safe, Comfortable, and Reliable Travel</p>
+                    <p>Safe, Comfortable, and Reliable Travel Across Pakistan</p>
                 </div>
                 <div className="footer-section">
                     <h4>Quick Links</h4>
                     <ul>
                         <li><a href="/schedules">Train Schedules</a></li>
                         <li><a href="/catalogue">Train Catalogue</a></li>
+                        <li><a href="/ratings">Ratings & Reviews</a></li>
                         <li><a href="/contact">Contact Us</a></li>
                     </ul>
                 </div>
@@ -21,6 +23,7 @@ function Footer() {
                     <p>📞 0300-1234567</p>
                     <p>📧 support@railway.com</p>
                     <p>📍 Lahore, Pakistan</p>
+                    <p>🕒 24/7 Customer Support</p>
                 </div>
                 <div className="footer-section">
                     <h4>Follow Us</h4>

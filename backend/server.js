@@ -4,6 +4,7 @@ const cors = require('cors');
 const bcrypt = require('bcryptjs');
 const dotenv = require('dotenv');
 const { executeProcedure, executeQuery } = require('./config/database');
+const cron = require('node-cron'); // npm install node-cron
 
 dotenv.config();
 
@@ -353,7 +354,7 @@ app.post('/api/ratings', authenticate, async (req, res) => {
     }
 });
 
-// Book ticket
+// Book ticket (returns bookingId and paymentExpiry)
 app.post('/api/bookings', authenticate, async (req, res) => {
     try {
         const { scheduleId, seatNumber } = req.body;
@@ -365,7 +366,14 @@ app.post('/api/bookings', authenticate, async (req, res) => {
         if (result.recordset && result.recordset[0]) {
             const bookingResult = result.recordset[0];
             if (bookingResult.Success === 1) {
-                res.json({ success: true, message: 'Booking successful', data: { bookingId: bookingResult.BookingID } });
+                res.json({ 
+                    success: true, 
+                    message: bookingResult.Message,
+                    data: { 
+                        bookingId: bookingResult.BookingID,
+                        paymentExpiry: bookingResult.PaymentExpiry
+                    }
+                });
             } else {
                 res.status(400).json({ success: false, message: bookingResult.Message });
             }
@@ -385,7 +393,7 @@ app.get('/api/my-bookings', authenticate, async (req, res) => {
     }
 });
 
-// Cancel booking
+// Cancel confirmed booking (with refund request logic)
 app.post('/api/bookings/:id/cancel', authenticate, async (req, res) => {
     try {
         const { reason } = req.body;
@@ -403,6 +411,68 @@ app.post('/api/bookings/:id/cancel', authenticate, async (req, res) => {
         }
     } catch (error) {
         res.status(500).json({ success: false, message: 'Cancellation failed' });
+    }
+});
+
+// Cancel pending booking (before payment)
+app.post('/api/bookings/:id/cancel-pending', authenticate, async (req, res) => {
+    try {
+        const bookingId = parseInt(req.params.id);
+        const result = await executeProcedure('sp_CancelPendingBooking', { BookingID: bookingId });
+        if (result.recordset && result.recordset[0]) {
+            const cancelResult = result.recordset[0];
+            if (cancelResult.Success === 1) {
+                res.json({ success: true, message: cancelResult.Message });
+            } else {
+                res.status(400).json({ success: false, message: cancelResult.Message });
+            }
+        }
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Cancel failed' });
+    }
+});
+
+// Request refund for paid booking
+app.post('/api/bookings/:id/request-refund', authenticate, async (req, res) => {
+    try {
+        const bookingId = parseInt(req.params.id);
+        const { reason } = req.body;
+        const result = await executeProcedure('sp_RequestRefund', {
+            BookingID: bookingId,
+            ClientID: req.user.id,
+            Reason: reason || 'Customer request'
+        });
+        if (result.recordset && result.recordset[0]) {
+            const refundResult = result.recordset[0];
+            if (refundResult.Success === 1) {
+                res.json({ success: true, message: refundResult.Message });
+            } else {
+                res.status(400).json({ success: false, message: refundResult.Message });
+            }
+        }
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Refund request failed' });
+    }
+});
+
+// Confirm payment (simulate payment gateway)
+app.post('/api/payment/confirm', authenticate, async (req, res) => {
+    try {
+        const { bookingId, paymentMethod, cardDetails } = req.body;
+        const result = await executeProcedure('sp_ConfirmPayment', {
+            BookingID: bookingId,
+            PaymentIntentId: 'pay_' + Date.now() + '_' + Math.random().toString(36).substr(2, 8)
+        });
+        if (result.recordset && result.recordset[0]) {
+            const paymentResult = result.recordset[0];
+            if (paymentResult.Success === 1) {
+                res.json({ success: true, message: paymentResult.Message });
+            } else {
+                res.status(400).json({ success: false, message: paymentResult.Message });
+            }
+        }
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Payment confirmation failed' });
     }
 });
 
@@ -470,7 +540,7 @@ app.get('/api/admin/users', authenticate, requireAdmin, async (req, res) => {
 app.get('/api/admin/bookings', authenticate, requireAdmin, async (req, res) => {
     try {
         const result = await executeQuery(`
-            SELECT b.BookingID, b.BookingDate, b.SeatNumber, b.TotalAmount, b.Status,
+            SELECT b.BookingID, b.BookingDate, b.SeatNumber, b.TotalAmount, b.Status, b.PaymentStatus,
                    c.FirstName, c.LastName, c.Email,
                    t.TrainName, t.TrainNumber,
                    dep.StationName AS DepartureStation, arr.StationName AS ArrivalStation,
@@ -535,7 +605,6 @@ app.post('/api/admin/create', authenticate, requireAdmin, async (req, res) => {
 // ADMIN SCHEDULE MANAGEMENT ROUTES
 // ============================================
 
-// Get all schedules for admin
 app.get('/api/admin/schedules', authenticate, requireAdmin, async (req, res) => {
     try {
         const result = await executeProcedure('sp_GetAllSchedulesAdmin');
@@ -546,7 +615,6 @@ app.get('/api/admin/schedules', authenticate, requireAdmin, async (req, res) => 
     }
 });
 
-// Add new schedule
 app.post('/api/admin/schedules', authenticate, requireAdmin, async (req, res) => {
     try {
         const { trainId, departureStationId, arrivalStationId, departureTime, arrivalTime, ticketPrice, availableSeats, status } = req.body;
@@ -580,7 +648,6 @@ app.post('/api/admin/schedules', authenticate, requireAdmin, async (req, res) =>
     }
 });
 
-// Update schedule
 app.put('/api/admin/schedules/:id', authenticate, requireAdmin, async (req, res) => {
     try {
         const scheduleId = parseInt(req.params.id);
@@ -612,7 +679,6 @@ app.put('/api/admin/schedules/:id', authenticate, requireAdmin, async (req, res)
     }
 });
 
-// Delete schedule
 app.delete('/api/admin/schedules/:id', authenticate, requireAdmin, async (req, res) => {
     try {
         const scheduleId = parseInt(req.params.id);
@@ -629,6 +695,86 @@ app.delete('/api/admin/schedules/:id', authenticate, requireAdmin, async (req, r
     } catch (error) {
         console.error('Error deleting schedule:', error);
         res.status(500).json({ success: false, message: 'Error deleting schedule' });
+    }
+});
+
+// ============================================
+// ADMIN REFUND MANAGEMENT ROUTES
+// ============================================
+
+app.get('/api/admin/refund-requests', authenticate, requireAdmin, async (req, res) => {
+    try {
+        const result = await executeQuery(`
+            SELECT rr.*, b.TotalAmount, b.BookingID, c.FirstName, c.LastName, c.Email,
+                   s.DepartureTime, t.TrainName
+            FROM RefundRequests rr
+            INNER JOIN Bookings b ON rr.BookingID = b.BookingID
+            INNER JOIN Clients c ON rr.ClientID = c.ClientID
+            LEFT JOIN Schedule s ON b.ScheduleID = s.ScheduleID
+            LEFT JOIN Trains t ON s.TrainID = t.TrainID
+            ORDER BY rr.RequestDate DESC
+        `);
+        res.json({ success: true, data: result.recordset || [] });
+    } catch (error) {
+        console.error('Error fetching refund requests:', error);
+        res.status(500).json({ success: false, message: 'Error fetching refund requests' });
+    }
+});
+
+app.post('/api/admin/refund-requests/:id/approve', authenticate, requireAdmin, async (req, res) => {
+    try {
+        const requestId = parseInt(req.params.id);
+        const { comment } = req.body;
+        const result = await executeProcedure('sp_ApproveRefund', {
+            RequestID: requestId,
+            AdminComment: comment || 'Approved by admin'
+        });
+        if (result.recordset && result.recordset[0]) {
+            res.json({ success: true, message: result.recordset[0].Message });
+        }
+    } catch (error) {
+        console.error('Error approving refund:', error);
+        res.status(500).json({ success: false, message: 'Approval failed' });
+    }
+});
+
+app.post('/api/admin/refund-requests/:id/reject', authenticate, requireAdmin, async (req, res) => {
+    try {
+        const requestId = parseInt(req.params.id);
+        const { comment } = req.body;
+        const result = await executeProcedure('sp_RejectRefund', {
+            RequestID: requestId,
+            AdminComment: comment || 'Rejected by admin'
+        });
+        if (result.recordset && result.recordset[0]) {
+            res.json({ success: true, message: result.recordset[0].Message });
+        }
+    } catch (error) {
+        console.error('Error rejecting refund:', error);
+        res.status(500).json({ success: false, message: 'Rejection failed' });
+    }
+});
+
+app.post('/api/admin/clean-expired-bookings', authenticate, requireAdmin, async (req, res) => {
+    try {
+        const result = await executeProcedure('sp_CancelExpiredPendingBookings');
+        res.json({ success: true, message: 'Expired bookings cleaned', data: result.recordset?.[0] });
+    } catch (error) {
+        console.error('Error cleaning expired bookings:', error);
+        res.status(500).json({ success: false, message: 'Cleanup failed' });
+    }
+});
+
+// ============================================
+// SCHEDULED JOB: Auto-cancel expired pending bookings every 5 minutes
+// ============================================
+cron.schedule('*/5 * * * *', async () => {
+    console.log('[CRON] Running expired bookings cleanup...');
+    try {
+        await executeProcedure('sp_CancelExpiredPendingBookings');
+        console.log('[CRON] Cleanup completed');
+    } catch (error) {
+        console.error('[CRON] Cleanup error:', error);
     }
 });
 

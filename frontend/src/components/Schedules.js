@@ -48,11 +48,21 @@ function Schedules() {
             });
 
             if (response.data.success) {
-                toast.success('Booking successful!');
+                const { bookingId, paymentExpiry } = response.data.data;
+                
+                // Close modal
                 setBookingModal(null);
                 setSeatNumber('');
-                fetchSchedules();
-                navigate('/bookings');
+                
+                // Navigate to payment page with booking details
+                navigate('/payment', {
+                    state: {
+                        bookingId: bookingId,
+                        scheduleDetails: schedule,
+                        expiryTime: paymentExpiry,
+                        amount: schedule.TicketPrice
+                    }
+                });
             }
         } catch (error) {
             toast.error(error.response?.data?.message || 'Booking failed');

@@ -13,10 +13,13 @@ import Contact from './components/Contact';
 import AdminDashboard from './components/AdminDashboard';
 import AdminCreate from './components/AdminCreate';
 import AdminSchedules from './components/AdminSchedules';
+import Payment from './components/Payment';
+import AdminRefunds from './components/AdminRefunds';
+import MyPayments from './components/MyPayments';
+import Header from './components/Header';   // note the 's'
 import { isAuthenticated, getCurrentUser } from './api';
 import './App.css';
 
-// Protect routes for authenticated users
 const ProtectedRoute = ({ children }) => {
     if (!isAuthenticated()) {
         return <Navigate to="/login" replace />;
@@ -24,7 +27,6 @@ const ProtectedRoute = ({ children }) => {
     return children;
 };
 
-// Admin-only route guard
 const AdminRoute = ({ children }) => {
     const user = getCurrentUser();
     if (!isAuthenticated()) {
@@ -46,60 +48,23 @@ function App() {
                 <Route path="/signup" element={<Signup />} />
                 
                 {/* Routes with Layout */}
-                <Route path="/" element={
-                    <Layout>
-                        <Navigate to="/schedules" replace />
-                    </Layout>
-                } />
-                <Route path="/schedules" element={
-                    <Layout>
-                        <Schedules />
-                    </Layout>
-                } />
-                <Route path="/catalogue" element={
-                    <Layout>
-                        <Catalogue />
-                    </Layout>
-                } />
-                <Route path="/ratings" element={
-                    <Layout>
-                        <Ratings />
-                    </Layout>
-                } />
-                <Route path="/contact" element={
-                    <Layout>
-                        <Contact />
-                    </Layout>
-                } />
+                <Route path="/" element={<Layout><Navigate to="/schedules" replace /></Layout>} />
+                <Route path="/schedules" element={<Layout><Schedules /></Layout>} />
+                <Route path="/catalogue" element={<Layout><Catalogue /></Layout>} />
+                <Route path="/ratings" element={<Layout><Ratings /></Layout>} />
+                <Route path="/contact" element={<Layout><Contact /></Layout>} />
                 
                 {/* Protected User Routes */}
-                <Route path="/dashboard" element={
-                    <Layout>
-                        <ProtectedRoute><Dashboard /></ProtectedRoute>
-                    </Layout>
-                } />
-                <Route path="/bookings" element={
-                    <Layout>
-                        <ProtectedRoute><Bookings /></ProtectedRoute>
-                    </Layout>
-                } />
+                <Route path="/dashboard" element={<Layout><ProtectedRoute><Dashboard /></ProtectedRoute></Layout>} />
+                <Route path="/bookings" element={<Layout><ProtectedRoute><Bookings /></ProtectedRoute></Layout>} />
+                <Route path="/my-payments" element={<Layout><ProtectedRoute><MyPayments /></ProtectedRoute></Layout>} />
+                <Route path="/payment" element={<Layout><ProtectedRoute><Payment /></ProtectedRoute></Layout>} />
                 
                 {/* Admin Routes */}
-                <Route path="/admin/dashboard" element={
-                    <Layout>
-                        <AdminRoute><AdminDashboard /></AdminRoute>
-                    </Layout>
-                } />
-                <Route path="/admin/create" element={
-                    <Layout>
-                        <AdminRoute><AdminCreate /></AdminRoute>
-                    </Layout>
-                } />
-                <Route path="/admin/schedules" element={
-                    <Layout>
-                        <AdminRoute><AdminSchedules /></AdminRoute>
-                    </Layout>
-                } />
+                <Route path="/admin/dashboard" element={<Layout><AdminRoute><AdminDashboard /></AdminRoute></Layout>} />
+                <Route path="/admin/create" element={<Layout><AdminRoute><AdminCreate /></AdminRoute></Layout>} />
+                <Route path="/admin/schedules" element={<Layout><AdminRoute><AdminSchedules /></AdminRoute></Layout>} />
+                <Route path="/admin/refunds" element={<Layout><AdminRoute><AdminRefunds /></AdminRoute></Layout>} />
             </Routes>
         </Router>
     );

@@ -28,7 +28,7 @@
     flex-wrap: wrap;
     gap: 1.5rem;
     box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    border-left: 4px solid;
+    border-left: 4px solid #FFC107;
 }
 
 .loyalty-badge {
@@ -55,7 +55,7 @@
     font-size: 2rem;
     font-weight: bold;
     display: block;
-    color: #1f2937;
+    color: #FF5722;
 }
 
 .points-label {
@@ -76,7 +76,7 @@
     font-size: 1.2rem;
     font-weight: bold;
     display: block;
-    color: #1f2937;
+    color: #FF5722;
 }
 
 .stat-label {
@@ -116,7 +116,7 @@
 
 .action-icon {
     font-size: 2rem;
-    color: #2a5298;
+    color: #FF5722;
     margin-bottom: 1rem;
 }
 
@@ -192,7 +192,7 @@
 }
 
 .view-all {
-    color: #2a5298;
+    color: #FF5722;
     text-decoration: none;
     font-weight: 600;
     display: inline-block;

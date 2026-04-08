@@ -22,14 +22,17 @@ function AdminSchedules() {
         status: 'Scheduled'
     });
 
-    useEffect(() => {
-        fetchData();
-    }, []);
+    // Get auth headers
+    const getAuthHeaders = () => {
+        const token = localStorage.getItem('token');
+        return { Authorization: `Bearer ${token}` };
+    };
 
+    // Fetch all data
     const fetchData = async () => {
+        setLoading(true);
         try {
-            const token = localStorage.getItem('token');
-            const headers = { Authorization: `Bearer ${token}` };
+            const headers = getAuthHeaders();
             
             const [schedulesRes, trainsRes, stationsRes] = await Promise.all([
                 axios.get('http://localhost:5000/api/admin/schedules', { headers }),
@@ -48,6 +51,10 @@ function AdminSchedules() {
         }
     };
 
+    useEffect(() => {
+        fetchData();
+    }, []);
+
     const handleInputChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
@@ -55,19 +62,26 @@ function AdminSchedules() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         
-        const token = localStorage.getItem('token');
-        const headers = { Authorization: `Bearer ${token}` };
+        // Validation
+        if (formData.departureTime >= formData.arrivalTime) {
+            toast.error('Arrival time must be after departure time');
+            return;
+        }
         
-        // Format dates properly for SQL Server
-        const departureTimeFormatted = new Date(formData.departureTime).toISOString().slice(0, 19).replace('T', ' ');
-        const arrivalTimeFormatted = new Date(formData.arrivalTime).toISOString().slice(0, 19).replace('T', ' ');
+        const headers = getAuthHeaders();
+        
+        // Format dates for SQL Server (YYYY-MM-DD HH:MM:SS)
+        const formatForSQL = (dateTimeStr) => {
+            if (!dateTimeStr) return null;
+            return new Date(dateTimeStr).toISOString().slice(0, 19).replace('T', ' ');
+        };
         
         const payload = {
             trainId: parseInt(formData.trainId),
             departureStationId: parseInt(formData.departureStationId),
             arrivalStationId: parseInt(formData.arrivalStationId),
-            departureTime: departureTimeFormatted,
-            arrivalTime: arrivalTimeFormatted,
+            departureTime: formatForSQL(formData.departureTime),
+            arrivalTime: formatForSQL(formData.arrivalTime),
             ticketPrice: parseFloat(formData.ticketPrice),
             availableSeats: parseInt(formData.availableSeats),
             status: formData.status
@@ -90,27 +104,34 @@ function AdminSchedules() {
                 toast.success('Schedule added successfully!');
             }
             
+            // Close modal and refresh data
             setShowForm(false);
             setEditingSchedule(null);
-            setFormData({
-                trainId: '',
-                departureStationId: '',
-                arrivalStationId: '',
-                departureTime: '',
-                arrivalTime: '',
-                ticketPrice: '',
-                availableSeats: '',
-                status: 'Scheduled'
-            });
-            fetchData();
+            resetForm();
+            
+            // IMPORTANT: Refresh the schedules list
+            await fetchData();
+            
         } catch (error) {
             console.error('Submit error:', error);
             toast.error(error.response?.data?.message || 'Operation failed');
         }
     };
 
+    const resetForm = () => {
+        setFormData({
+            trainId: '',
+            departureStationId: '',
+            arrivalStationId: '',
+            departureTime: '',
+            arrivalTime: '',
+            ticketPrice: '',
+            availableSeats: '',
+            status: 'Scheduled'
+        });
+    };
+
     const handleEdit = (schedule) => {
-        // Format date for datetime-local input (YYYY-MM-DDThh:mm)
         const formatDateForInput = (dateString) => {
             if (!dateString) return '';
             const date = new Date(dateString);
@@ -132,15 +153,14 @@ function AdminSchedules() {
     };
 
     const handleDelete = async (scheduleId) => {
-        if (!window.confirm('Are you sure you want to delete this schedule?')) return;
+        if (!window.confirm('Are you sure you want to delete this schedule? This may affect existing bookings.')) return;
         
-        const token = localStorage.getItem('token');
-        const headers = { Authorization: `Bearer ${token}` };
+        const headers = getAuthHeaders();
         
         try {
             await axios.delete(`http://localhost:5000/api/admin/schedules/${scheduleId}`, { headers });
             toast.success('Schedule deleted successfully!');
-            fetchData();
+            await fetchData(); // Refresh after delete
         } catch (error) {
             console.error('Delete error:', error);
             toast.error(error.response?.data?.message || 'Delete failed');
@@ -168,10 +188,12 @@ function AdminSchedules() {
                 </button>
             </div>
 
+            {/* Modal Form */}
             {showForm && (
                 <div className="modal-overlay" onClick={() => {
                     setShowForm(false);
                     setEditingSchedule(null);
+                    resetForm();
                 }}>
                     <div className="modal-content" onClick={e => e.stopPropagation()}>
                         <h2>{editingSchedule ? 'Edit Schedule' : 'Add New Schedule'}</h2>
@@ -279,6 +301,7 @@ function AdminSchedules() {
                                 <button type="button" className="cancel-btn" onClick={() => {
                                     setShowForm(false);
                                     setEditingSchedule(null);
+                                    resetForm();
                                 }}>
                                     Cancel
                                 </button>
@@ -291,6 +314,7 @@ function AdminSchedules() {
                 </div>
             )}
 
+            {/* Schedules Table */}
             <div className="schedules-table-container">
                 {schedules.length === 0 ? (
                     <div className="no-data">No schedules found. Click "Add New Schedule" to create one.</div>

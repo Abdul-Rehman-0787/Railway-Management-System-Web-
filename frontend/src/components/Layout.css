@@ -5,8 +5,8 @@
 }
 
 .header {
-    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-    color: white;
+    background: linear-gradient(135deg, #FFC107 0%, #FF5722 100%);
+    color: #212121;
     padding: 1rem 0;
     position: sticky;
     top: 0;

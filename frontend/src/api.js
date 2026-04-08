@@ -55,6 +55,8 @@ export const protectedAPI = {
     bookTicket: (data) => API.post('/bookings', data),
     getMyBookings: () => API.get('/my-bookings'),
     cancelBooking: (id, reason) => API.post(`/bookings/${id}/cancel`, { reason }),
+    cancelPendingBooking: (id) => API.post(`/bookings/${id}/cancel-pending`),
+    requestRefund: (id, reason) => API.post(`/bookings/${id}/request-refund`, { reason }),
     submitRating: (data) => API.post('/ratings', data),
     getLoyalty: () => API.get('/loyalty')
 };
@@ -84,11 +86,19 @@ export const clearAuthData = () => {
     localStorage.removeItem('user');
 };
 
+export const logout = () => {
+    clearAuthData();
+    window.location.href = '/login';
+};
+
 // Admin APIs
 export const adminAPI = {
     getAllUsers: () => API.get('/admin/users'),
     getAllBookings: () => API.get('/admin/bookings'),
     createAdmin: (data) => API.post('/admin/create', data),
+    getRefundRequests: () => API.get('/admin/refund-requests'),
+    approveRefund: (id, comment) => API.post(`/admin/refund-requests/${id}/approve`, { comment }),
+    rejectRefund: (id, comment) => API.post(`/admin/refund-requests/${id}/reject`, { comment })
 };
 
 export default API;

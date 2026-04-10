@@ -33,7 +33,7 @@ function Header() {
             <div className="header-container">
                 <div className="logo">
                     <img src={logo} alt="Train Logo" className="logo-image" />
-                    <span className="logo-text">Railway System</span>
+                    <span className="logo-text">National Railway System</span>
                 </div>
 
                 <div className="nav-auth-wrapper">

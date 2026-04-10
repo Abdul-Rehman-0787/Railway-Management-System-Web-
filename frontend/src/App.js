@@ -19,6 +19,7 @@ import MyPayments from './components/MyPayments';
 import Header from './components/Header';   // note the 's'
 import { isAuthenticated, getCurrentUser } from './api';
 import './App.css';
+import Footer from './components/Footer';
 
 const ProtectedRoute = ({ children }) => {
     if (!isAuthenticated()) {
@@ -44,9 +45,9 @@ function App() {
             <Toaster position="top-right" />
             <Routes>
                 {/* Public Routes */}
-                <Route path="/login" element={<Login />} />
-                <Route path="/signup" element={<Signup />} />
-                
+                <Route path="/login" element={<Layout><Login /></Layout>} />
+                <Route path="/signup" element={<Layout><Signup /></Layout>} />
+
                 {/* Routes with Layout */}
                 <Route path="/" element={<Layout><Navigate to="/schedules" replace /></Layout>} />
                 <Route path="/schedules" element={<Layout><Schedules /></Layout>} />

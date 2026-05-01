@@ -97,6 +97,7 @@ railway-management-system/
 │
 ├── database.sql                 # Complete DB schema + stored procedures + sample data
 └── README.md
+└── Required_Changes.md
 ```
 
 ---

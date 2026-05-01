@@ -1,9 +1,15 @@
 -- =====================================================
 -- RAILWAY MANAGEMENT SYSTEM – COMPLETE DATABASE SCRIPT
 -- =====================================================
+-- This script creates a fresh database with all tables,
+-- stored procedures, triggers, and sample data.
+-- Run this ONCE in SQL Server Management Studio.
+-- =====================================================
+
 USE master;
 GO
 
+-- Drop existing database if it exists
 IF EXISTS (SELECT name FROM sys.databases WHERE name = 'RailwayManagementSystem')
 BEGIN
     ALTER DATABASE RailwayManagementSystem SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
@@ -11,12 +17,17 @@ BEGIN
 END
 GO
 
+-- Create new database
 CREATE DATABASE RailwayManagementSystem;
 GO
 USE RailwayManagementSystem;
 GO
 
--- Tables
+-- =====================================================
+-- TABLES
+-- =====================================================
+
+-- Users table
 CREATE TABLE Clients (
     ClientID      INT IDENTITY(1,1) PRIMARY KEY,
     FirstName     VARCHAR(50)  NOT NULL,
@@ -32,6 +43,7 @@ CREATE TABLE Clients (
     IsActive      BIT          DEFAULT 1
 );
 
+-- Stations table
 CREATE TABLE Stations (
     StationID   INT IDENTITY(1,1) PRIMARY KEY,
     StationName VARCHAR(100) NOT NULL,
@@ -41,6 +53,7 @@ CREATE TABLE Stations (
     IsActive    BIT DEFAULT 1
 );
 
+-- Trains table
 CREATE TABLE Trains (
     TrainID     INT IDENTITY(1,1) PRIMARY KEY,
     TrainName   VARCHAR(100) NOT NULL,
@@ -51,6 +64,7 @@ CREATE TABLE Trains (
     IsActive    BIT DEFAULT 1
 );
 
+-- Schedule table
 CREATE TABLE Schedule (
     ScheduleID       INT IDENTITY(1,1) PRIMARY KEY,
     TrainID          INT          NOT NULL,
@@ -68,6 +82,7 @@ CREATE TABLE Schedule (
     CONSTRAINT CHK_Arrival_After CHECK (ArrivalTime > DepartureTime)
 );
 
+-- Bookings table
 CREATE TABLE Bookings (
     BookingID       INT IDENTITY(1,1) PRIMARY KEY,
     ClientID        INT          NOT NULL,
@@ -83,6 +98,7 @@ CREATE TABLE Bookings (
     CONSTRAINT FK_Bookings_Schedule FOREIGN KEY (ScheduleID) REFERENCES Schedule(ScheduleID)
 );
 
+-- Payments table
 CREATE TABLE Payments (
     PaymentID     INT IDENTITY(1,1) PRIMARY KEY,
     BookingID     INT          NOT NULL,
@@ -94,6 +110,7 @@ CREATE TABLE Payments (
     CONSTRAINT FK_Payments_Booking FOREIGN KEY (BookingID) REFERENCES Bookings(BookingID) ON DELETE CASCADE
 );
 
+-- Cancellations table
 CREATE TABLE Cancellations (
     CancellationID   INT IDENTITY(1,1) PRIMARY KEY,
     BookingID        INT      NOT NULL,
@@ -104,6 +121,7 @@ CREATE TABLE Cancellations (
     CONSTRAINT FK_Cancellations_Booking FOREIGN KEY (BookingID) REFERENCES Bookings(BookingID) ON DELETE CASCADE
 );
 
+-- Ratings table
 CREATE TABLE Ratings (
     RatingID    INT IDENTITY(1,1) PRIMARY KEY,
     ClientID    INT          NOT NULL,
@@ -116,6 +134,7 @@ CREATE TABLE Ratings (
     CONSTRAINT CHK_Rating_Range CHECK (Rating BETWEEN 1 AND 5)
 );
 
+-- Loyalty Rewards table
 CREATE TABLE LoyaltyRewards (
     RewardID     INT IDENTITY(1,1) PRIMARY KEY,
     ClientID     INT          NOT NULL,
@@ -125,6 +144,7 @@ CREATE TABLE LoyaltyRewards (
     CONSTRAINT FK_Loyalty_Client FOREIGN KEY (ClientID) REFERENCES Clients(ClientID) ON DELETE CASCADE
 );
 
+-- Reward Transactions table
 CREATE TABLE RewardTransactions (
     TransactionID   INT IDENTITY(1,1) PRIMARY KEY,
     ClientID        INT          NOT NULL,
@@ -136,6 +156,7 @@ CREATE TABLE RewardTransactions (
     CONSTRAINT FK_RewardTx_Booking FOREIGN KEY (BookingID) REFERENCES Bookings(BookingID)
 );
 
+-- Catalogue table
 CREATE TABLE Catalogue (
     CatalogueID   INT IDENTITY(1,1) PRIMARY KEY,
     TrainID       INT          NOT NULL,
@@ -145,18 +166,7 @@ CREATE TABLE Catalogue (
     CONSTRAINT FK_Catalogue_Train FOREIGN KEY (TrainID) REFERENCES Trains(TrainID) ON DELETE CASCADE
 );
 
-CREATE TABLE ContactSupport (
-    TicketID      INT IDENTITY(1,1) PRIMARY KEY,
-    ClientID      INT,
-    Name          VARCHAR(100) NOT NULL,
-    Email         VARCHAR(100) NOT NULL,
-    Subject       VARCHAR(200) NOT NULL,
-    Message       TEXT         NOT NULL,
-    SubmittedAt   DATETIME     DEFAULT GETDATE(),
-    Status        VARCHAR(20)  DEFAULT 'Open',
-    CONSTRAINT FK_Support_Client FOREIGN KEY (ClientID) REFERENCES Clients(ClientID) ON DELETE SET NULL
-);
-
+-- Refund Requests table
 CREATE TABLE RefundRequests (
     RequestID       INT IDENTITY(1,1) PRIMARY KEY,
     BookingID       INT NOT NULL,
@@ -173,15 +183,43 @@ CREATE TABLE RefundRequests (
     CONSTRAINT FK_Refund_Client FOREIGN KEY (ClientID) REFERENCES Clients(ClientID)
 );
 
--- Indexes
+-- =====================================================
+-- UNIFIED CONVERSATIONS TABLE (Replaces ContactSupport)
+-- =====================================================
+CREATE TABLE Conversations (
+    ConversationID  INT IDENTITY(1,1) PRIMARY KEY,
+    UserID          INT NOT NULL,
+    UserName        VARCHAR(100) NOT NULL,
+    UserEmail       VARCHAR(100) NOT NULL,
+    Subject         VARCHAR(200) NOT NULL,
+    UserMessage     TEXT NOT NULL,
+    UserMessageDate DATETIME DEFAULT GETDATE(),
+    AdminReply      TEXT NULL,
+    AdminReplyDate  DATETIME NULL,
+    Status          VARCHAR(20) DEFAULT 'Pending',
+    CreatedAt       DATETIME DEFAULT GETDATE(),
+    UpdatedAt       DATETIME DEFAULT GETDATE(),
+    CONSTRAINT FK_Conversations_User FOREIGN KEY (UserID) REFERENCES Clients(ClientID) ON DELETE CASCADE
+);
+
+-- =====================================================
+-- INDEXES
+-- =====================================================
 CREATE INDEX IX_Clients_Email ON Clients(Email);
 CREATE INDEX IX_Schedule_DepartureTime ON Schedule(DepartureTime);
 CREATE INDEX IX_Bookings_ClientID ON Bookings(ClientID);
 CREATE INDEX IX_Bookings_ScheduleID ON Bookings(ScheduleID);
 CREATE INDEX IX_Bookings_PaymentExpiry ON Bookings(PaymentExpiry) WHERE PaymentStatus = 'Pending';
+CREATE INDEX IX_Conversations_UserID ON Conversations(UserID);
+CREATE INDEX IX_Conversations_Status ON Conversations(Status);
+CREATE UNIQUE INDEX IX_Unique_SeatPerSchedule ON Bookings(ScheduleID, SeatNumber) WHERE PaymentStatus IN ('Paid', 'Pending');
 GO
 
--- Stored Procedures
+-- =====================================================
+-- STORED PROCEDURES - AUTH & BOOKINGS
+-- =====================================================
+
+-- Register client
 CREATE OR ALTER PROCEDURE sp_RegisterClient
     @FirstName VARCHAR(50), @LastName VARCHAR(50), @Email VARCHAR(100),
     @Phone VARCHAR(20), @PasswordHash VARCHAR(255), @DateOfBirth DATE = NULL,
@@ -201,6 +239,7 @@ BEGIN
 END
 GO
 
+-- Login client
 CREATE OR ALTER PROCEDURE sp_LoginClient @Email VARCHAR(100)
 AS
 BEGIN
@@ -210,6 +249,7 @@ BEGIN
 END
 GO
 
+-- Get all schedules (public)
 CREATE OR ALTER PROCEDURE sp_GetAllSchedules
 AS
 BEGIN
@@ -225,6 +265,7 @@ BEGIN
 END
 GO
 
+-- Get schedule by ID
 CREATE OR ALTER PROCEDURE sp_GetScheduleByID @ScheduleID INT
 AS
 BEGIN
@@ -239,6 +280,7 @@ BEGIN
 END
 GO
 
+-- Book ticket
 CREATE OR ALTER PROCEDURE sp_BookTicket
     @ClientID INT, @ScheduleID INT, @SeatNumber VARCHAR(10)
 AS
@@ -267,6 +309,7 @@ BEGIN
 END
 GO
 
+-- Confirm payment
 CREATE OR ALTER PROCEDURE sp_ConfirmPayment @BookingID INT, @PaymentIntentId VARCHAR(100)
 AS
 BEGIN
@@ -295,6 +338,7 @@ BEGIN
 END
 GO
 
+-- Cancel pending booking
 CREATE OR ALTER PROCEDURE sp_CancelPendingBooking @BookingID INT
 AS
 BEGIN
@@ -311,6 +355,7 @@ BEGIN
 END
 GO
 
+-- Cancel confirmed booking
 CREATE OR ALTER PROCEDURE sp_CancelBooking @BookingID INT, @Reason VARCHAR(255)
 AS
 BEGIN
@@ -332,6 +377,7 @@ BEGIN
 END
 GO
 
+-- Request refund
 CREATE OR ALTER PROCEDURE sp_RequestRefund @BookingID INT, @ClientID INT, @Reason VARCHAR(500)
 AS
 BEGIN
@@ -350,6 +396,7 @@ BEGIN
 END
 GO
 
+-- Approve refund
 CREATE OR ALTER PROCEDURE sp_ApproveRefund @RequestID INT, @AdminComment VARCHAR(500)
 AS
 BEGIN
@@ -374,6 +421,7 @@ BEGIN
 END
 GO
 
+-- Reject refund
 CREATE OR ALTER PROCEDURE sp_RejectRefund @RequestID INT, @AdminComment VARCHAR(500)
 AS
 BEGIN
@@ -383,6 +431,7 @@ BEGIN
 END
 GO
 
+-- Auto-cancel expired bookings (cron job)
 CREATE OR ALTER PROCEDURE sp_CancelExpiredPendingBookings
 AS
 BEGIN
@@ -405,6 +454,7 @@ BEGIN
 END
 GO
 
+-- Get client bookings
 CREATE OR ALTER PROCEDURE sp_GetClientBookings @ClientID INT
 AS
 BEGIN
@@ -422,6 +472,7 @@ BEGIN
 END
 GO
 
+-- Get client loyalty
 CREATE OR ALTER PROCEDURE sp_GetClientLoyalty @ClientID INT
 AS
 BEGIN
@@ -431,16 +482,23 @@ BEGIN
 END
 GO
 
+-- Get all stations
 CREATE OR ALTER PROCEDURE sp_GetAllStations
 AS
 BEGIN SELECT StationID, StationName, City, Province FROM Stations WHERE IsActive = 1 ORDER BY City, StationName; END
 GO
 
+-- Get all trains
 CREATE OR ALTER PROCEDURE sp_GetAllTrains
 AS
 BEGIN SELECT TrainID, TrainName, TrainNumber, TrainType, TotalSeats, AvailableSeats FROM Trains WHERE IsActive = 1; END
 GO
 
+-- =====================================================
+-- STORED PROCEDURES - ADMIN
+-- =====================================================
+
+-- Get all schedules for admin
 CREATE OR ALTER PROCEDURE sp_GetAllSchedulesAdmin
 AS
 BEGIN
@@ -456,6 +514,7 @@ BEGIN
 END
 GO
 
+-- Add schedule
 CREATE OR ALTER PROCEDURE sp_AddSchedule
     @TrainID INT, @DepartureStationID INT, @ArrivalStationID INT,
     @DepartureTime DATETIME, @ArrivalTime DATETIME,
@@ -468,6 +527,7 @@ BEGIN
 END
 GO
 
+-- Update schedule
 CREATE OR ALTER PROCEDURE sp_UpdateSchedule
     @ScheduleID INT, @TrainID INT, @DepartureStationID INT, @ArrivalStationID INT,
     @DepartureTime DATETIME, @ArrivalTime DATETIME,
@@ -483,6 +543,7 @@ BEGIN
 END
 GO
 
+-- Delete schedule
 CREATE OR ALTER PROCEDURE sp_DeleteSchedule @ScheduleID INT
 AS
 BEGIN
@@ -496,7 +557,97 @@ BEGIN
 END
 GO
 
--- Trigger
+-- =====================================================
+-- STORED PROCEDURES - UNIFIED MESSAGING
+-- =====================================================
+
+-- User sends new message
+CREATE OR ALTER PROCEDURE sp_SendUserMessage
+    @UserID INT,
+    @UserName VARCHAR(100),
+    @UserEmail VARCHAR(100),
+    @Subject VARCHAR(200),
+    @Message TEXT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    IF EXISTS (SELECT 1 FROM Conversations WHERE UserID = @UserID AND Status = 'Pending')
+    BEGIN
+        SELECT 0 AS Success, 'You already have a pending message. Please wait for admin reply.' AS Message;
+        RETURN;
+    END
+    INSERT INTO Conversations (UserID, UserName, UserEmail, Subject, UserMessage, Status, CreatedAt, UpdatedAt)
+    VALUES (@UserID, @UserName, @UserEmail, @Subject, @Message, 'Pending', GETDATE(), GETDATE());
+    SELECT 1 AS Success, 'Message sent successfully.' AS Message, SCOPE_IDENTITY() AS ConversationID;
+END
+GO
+
+-- Admin sends reply
+CREATE OR ALTER PROCEDURE sp_SendAdminReply @ConversationID INT, @AdminReply TEXT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    IF NOT EXISTS (SELECT 1 FROM Conversations WHERE ConversationID = @ConversationID AND Status = 'Pending')
+    BEGIN
+        SELECT 0 AS Success, 'Conversation not found or already replied.' AS Message;
+        RETURN;
+    END
+    UPDATE Conversations 
+    SET AdminReply = @AdminReply, AdminReplyDate = GETDATE(), Status = 'Replied', UpdatedAt = GETDATE()
+    WHERE ConversationID = @ConversationID;
+    SELECT 1 AS Success, 'Reply sent successfully.' AS Message;
+END
+GO
+
+-- User sends follow-up
+CREATE OR ALTER PROCEDURE sp_SendFollowUpMessage @ConversationID INT, @UserID INT, @NewMessage TEXT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    IF NOT EXISTS (SELECT 1 FROM Conversations WHERE ConversationID = @ConversationID AND UserID = @UserID AND Status = 'Replied')
+    BEGIN
+        SELECT 0 AS Success, 'Cannot send follow-up. Admin has not replied yet.' AS Message;
+        RETURN;
+    END
+    UPDATE Conversations 
+    SET UserMessage = @NewMessage, UserMessageDate = GETDATE(), AdminReply = NULL, AdminReplyDate = NULL, Status = 'Pending', UpdatedAt = GETDATE()
+    WHERE ConversationID = @ConversationID;
+    SELECT 1 AS Success, 'Follow-up sent. Admin will reply.' AS Message;
+END
+GO
+
+-- Get user conversation
+CREATE OR ALTER PROCEDURE sp_GetUserConversation @UserID INT
+AS
+BEGIN
+    SELECT ConversationID, Subject, UserMessage, UserMessageDate, AdminReply, AdminReplyDate, Status
+    FROM Conversations WHERE UserID = @UserID ORDER BY UpdatedAt DESC;
+END
+GO
+
+-- Get all conversations (admin)
+CREATE OR ALTER PROCEDURE sp_GetAdminAllConversations
+AS
+BEGIN
+    SELECT ConversationID, UserID, UserName, UserEmail, Subject, UserMessage, UserMessageDate,
+           AdminReply, AdminReplyDate, Status, CreatedAt, UpdatedAt
+    FROM Conversations ORDER BY CASE WHEN Status = 'Pending' THEN 0 ELSE 1 END, UpdatedAt DESC;
+END
+GO
+
+-- Get conversation by ID
+CREATE OR ALTER PROCEDURE sp_GetConversationById @ConversationID INT
+AS
+BEGIN
+    SELECT ConversationID, UserID, UserName, UserEmail, Subject, UserMessage, UserMessageDate,
+           AdminReply, AdminReplyDate, Status
+    FROM Conversations WHERE ConversationID = @ConversationID;
+END
+GO
+
+-- =====================================================
+-- TRIGGERS
+-- =====================================================
 CREATE OR ALTER TRIGGER trg_UpdateLoyaltyTier ON LoyaltyRewards AFTER UPDATE
 AS
 BEGIN
@@ -518,7 +669,11 @@ BEGIN
 END
 GO
 
--- Sample Data
+-- =====================================================
+-- SAMPLE DATA
+-- =====================================================
+
+-- Stations
 INSERT INTO Stations (StationName, City, Province) VALUES
 ('Lahore Junction', 'Lahore', 'Punjab'),
 ('Karachi Cantt', 'Karachi', 'Sindh'),
@@ -529,6 +684,7 @@ INSERT INTO Stations (StationName, City, Province) VALUES
 ('Quetta', 'Quetta', 'Balochistan'),
 ('Islamabad', 'Islamabad', 'ICT');
 
+-- Trains
 INSERT INTO Trains (TrainName, TrainNumber, TotalSeats, AvailableSeats, TrainType) VALUES
 ('Green Line Express', 'GL-001', 300, 300, 'Express'),
 ('Karakoram Express', 'KK-102', 250, 250, 'Express'),
@@ -536,6 +692,7 @@ INSERT INTO Trains (TrainName, TrainNumber, TotalSeats, AvailableSeats, TrainTyp
 ('Tezgam Express', 'TZ-310', 280, 280, 'Express'),
 ('Bahauddin Zakariya', 'BZ-415', 220, 220, 'Local');
 
+-- Schedule
 DECLARE @BaseDate DATE = DATEADD(DAY, 1, GETDATE());
 INSERT INTO Schedule (TrainID, DepartureStation, ArrivalStation, DepartureTime, ArrivalTime, TicketPrice, AvailableSeats) VALUES
 (1, 1, 2, DATEADD(HOUR, 8, CAST(@BaseDate AS DATETIME)), DATEADD(HOUR, 14, CAST(@BaseDate AS DATETIME)), 2500, 300),
@@ -544,14 +701,17 @@ INSERT INTO Schedule (TrainID, DepartureStation, ArrivalStation, DepartureTime, 
 (4, 3, 6, DATEADD(HOUR, 6, CAST(DATEADD(DAY, 3, @BaseDate) AS DATETIME)), DATEADD(HOUR, 12, CAST(DATEADD(DAY, 3, @BaseDate) AS DATETIME)), 1800, 280),
 (5, 4, 5, DATEADD(HOUR, 10, CAST(DATEADD(DAY, 1, @BaseDate) AS DATETIME)), DATEADD(HOUR, 14.5, CAST(DATEADD(DAY, 1, @BaseDate) AS DATETIME)), 950, 220);
 
+-- Clients (password: password123 for all)
 DECLARE @PasswordHash VARCHAR(255) = '$2b$10$6eI6q8XvZ5xY9zM7wP2QKOVs7cT9jFyKz3LmNpQrStUvWxYzAbCd';
 INSERT INTO Clients (FirstName, LastName, Email, Phone, PasswordHash, Role) VALUES
 ('Admin', 'User', 'admin@railway.com', '0300-0000000', @PasswordHash, 'Admin'),
 ('Test', 'User', 'test@test.com', '0300-1111111', @PasswordHash, 'User'),
 ('Super', 'Admin', 'l230787@lhr.nu.edu.pk', '0300-2222222', @PasswordHash, 'Admin');
 
+-- Loyalty Rewards
 INSERT INTO LoyaltyRewards (ClientID, TotalPoints, TierLevel) SELECT ClientID, 0, 'Bronze' FROM Clients;
 
+-- Catalogue
 INSERT INTO Catalogue (TrainID, Title, Description) VALUES
 (1, 'Green Line Luxury', 'Experience premium travel with air-conditioned coaches, reclining seats, and on-board dining.'),
 (2, 'Karakoram Comfort', 'Travel through scenic routes with panoramic windows and dedicated luggage storage.'),
@@ -559,10 +719,17 @@ INSERT INTO Catalogue (TrainID, Title, Description) VALUES
 (4, 'Tezgam Business', 'Business class cabin with Wi-Fi, charging ports, and complimentary meals.'),
 (5, 'Bahauddin Expedition', 'Explore Punjab with our regional express service connecting major cities.');
 
+-- =====================================================
+-- FINAL OUTPUT
+-- =====================================================
 PRINT '========================================';
 PRINT '✅ Database setup complete!';
+PRINT '========================================';
 PRINT 'Test Credentials:';
 PRINT '  Admin (hardcoded): l230787@lhr.nu.edu.pk / password123';
 PRINT '  Admin (DB):        admin@railway.com / password123';
 PRINT '  User:              test@test.com / password123';
+PRINT '========================================';
+PRINT 'Tables created:';
+SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE' ORDER BY TABLE_NAME;
 PRINT '========================================';

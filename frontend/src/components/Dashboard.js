@@ -42,7 +42,11 @@ function Dashboard() {
         }
     };
 
-    if (loading) return <div className="loading">Loading dashboard...</div>;
+    if (loading) return (
+    <div className="dashboard-loading">
+        📊 Loading dashboard...
+    </div>
+    );
 
     return (
         <div className="dashboard-container">

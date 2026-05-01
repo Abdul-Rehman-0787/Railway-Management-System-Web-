@@ -168,15 +168,54 @@ app.get('/api/ratings', async (req, res) => {
 });
 
 // Submit contact support (public)
+// Submit contact support - Now creates conversation in unified system
 app.post('/api/contact', async (req, res) => {
     try {
         const { name, email, subject, message, clientId } = req.body;
-        await executeQuery(
-            'INSERT INTO ContactSupport (ClientID, Name, Email, Subject, Message) VALUES (@param0, @param1, @param2, @param3, @param4)',
-            [clientId || null, name, email, subject, message]
-        );
-        res.json({ success: true, message: 'Message sent successfully' });
+        
+        // Check if user exists (logged in)
+        if (clientId) {
+            // User is logged in - check for existing pending conversation
+            const checkResult = await executeQuery(
+                'SELECT ConversationID FROM Conversations WHERE UserID = @param0 AND Status = ''Pending''',
+                [clientId]
+            );
+            
+            if (checkResult.recordset && checkResult.recordset.length > 0) {
+                return res.status(400).json({ 
+                    success: false, 
+                    message: 'You already have a pending message. Please wait for admin reply before sending a new message.' 
+                });
+            }
+            
+            // Get user details
+            const userResult = await executeQuery(
+                'SELECT FirstName, LastName FROM Clients WHERE ClientID = @param0',
+                [clientId]
+            );
+            
+            const userName = `${userResult.recordset[0].FirstName} ${userResult.recordset[0].LastName}`;
+            
+            // Create conversation
+            await executeProcedure('sp_SendUserMessage', {
+                UserID: clientId,
+                UserName: userName,
+                UserEmail: email,
+                Subject: subject,
+                Message: message
+            });
+        } else {
+            // User is not logged in - create temporary user record? Or just store differently
+            // For now, store as guest
+            await executeQuery(
+                'INSERT INTO Conversations (UserID, UserName, UserEmail, Subject, UserMessage, Status) VALUES (@param0, @param1, @param2, @param3, @param4, ''Pending'')',
+                [0, name, email, subject, message]
+            );
+        }
+        
+        res.json({ success: true, message: 'Message sent successfully. Admin will reply shortly.' });
     } catch (error) {
+        console.error('Error sending message:', error);
         res.status(500).json({ success: false, message: 'Error sending message' });
     }
 });
@@ -503,7 +542,140 @@ app.get('/api/loyalty', authenticate, async (req, res) => {
 });
 
 // ============================================
-// ADMIN ROUTES (Requires Authentication + Admin Role)
+// USER MESSAGING ROUTES (New Conversation System)
+// ============================================
+
+// User sends new message
+app.post('/api/messages/send', authenticate, async (req, res) => {
+    try {
+        const { subject, message } = req.body;
+        const user = await executeQuery(
+            'SELECT FirstName, LastName, Email FROM Clients WHERE ClientID = @param0',
+            [req.user.id]
+        );
+        
+        const userName = `${user.recordset[0].FirstName} ${user.recordset[0].LastName}`;
+        const userEmail = user.recordset[0].Email;
+        
+        const result = await executeProcedure('sp_SendUserMessage', {
+            UserID: req.user.id,
+            UserName: userName,
+            UserEmail: userEmail,
+            Subject: subject,
+            Message: message
+        });
+        
+        if (result.recordset && result.recordset[0]) {
+            res.json({ 
+                success: result.recordset[0].Success === 1, 
+                message: result.recordset[0].Message,
+                conversationId: result.recordset[0].ConversationID
+            });
+        }
+    } catch (error) {
+        console.error('Error sending message:', error);
+        res.status(500).json({ success: false, message: 'Error sending message' });
+    }
+});
+
+// User sends follow-up message
+app.post('/api/messages/:id/followup', authenticate, async (req, res) => {
+    try {
+        const conversationId = parseInt(req.params.id);
+        const { message } = req.body;
+        
+        const result = await executeProcedure('sp_SendFollowUpMessage', {
+            ConversationID: conversationId,
+            UserID: req.user.id,
+            NewMessage: message
+        });
+        
+        if (result.recordset && result.recordset[0]) {
+            res.json({ 
+                success: result.recordset[0].Success === 1, 
+                message: result.recordset[0].Message 
+            });
+        }
+    } catch (error) {
+        console.error('Error sending follow-up:', error);
+        res.status(500).json({ success: false, message: 'Error sending follow-up' });
+    }
+});
+
+// Get user's conversation
+app.get('/api/messages/my-conversation', authenticate, async (req, res) => {
+    try {
+        const result = await executeProcedure('sp_GetUserConversation', { UserID: req.user.id });
+        res.json({ success: true, data: result.recordset || [] });
+    } catch (error) {
+        console.error('Error fetching conversation:', error);
+        res.status(500).json({ success: false, message: 'Error fetching conversation' });
+    }
+});
+
+// ============================================
+// ADMIN MESSAGING ROUTES (New Conversation System)
+// ============================================
+
+// Get all conversations (admin)
+app.get('/api/admin/messages/all', authenticate, requireAdmin, async (req, res) => {
+    try {
+        const result = await executeProcedure('sp_GetAdminAllConversations');
+        res.json({ success: true, data: result.recordset || [] });
+    } catch (error) {
+        console.error('Error fetching conversations:', error);
+        res.status(500).json({ success: false, message: 'Error fetching conversations' });
+    }
+});
+
+// Get pending messages (admin)
+app.get('/api/admin/messages/pending', authenticate, requireAdmin, async (req, res) => {
+    try {
+        const result = await executeProcedure('sp_GetAdminPendingMessages');
+        res.json({ success: true, data: result.recordset || [] });
+    } catch (error) {
+        console.error('Error fetching pending messages:', error);
+        res.status(500).json({ success: false, message: 'Error fetching pending messages' });
+    }
+});
+
+// Admin sends reply
+app.post('/api/admin/messages/:id/reply', authenticate, requireAdmin, async (req, res) => {
+    try {
+        const conversationId = parseInt(req.params.id);
+        const { reply } = req.body;
+        
+        const result = await executeProcedure('sp_SendAdminReply', {
+            ConversationID: conversationId,
+            AdminReply: reply
+        });
+        
+        if (result.recordset && result.recordset[0]) {
+            res.json({ 
+                success: result.recordset[0].Success === 1, 
+                message: result.recordset[0].Message 
+            });
+        }
+    } catch (error) {
+        console.error('Error sending reply:', error);
+        res.status(500).json({ success: false, message: 'Error sending reply' });
+    }
+});
+
+// Get conversation details (admin)
+app.get('/api/admin/messages/:id', authenticate, requireAdmin, async (req, res) => {
+    try {
+        const conversationId = parseInt(req.params.id);
+        const result = await executeProcedure('sp_GetConversationById', { ConversationID: conversationId });
+        res.json({ success: true, data: result.recordset?.[0] || null });
+    } catch (error) {
+        console.error('Error fetching conversation details:', error);
+        res.status(500).json({ success: false, message: 'Error fetching conversation details' });
+    }
+});
+
+// ============================================
+// ADMIN ROUTES (Existing)
 // ============================================
 
 // Get all users
@@ -762,6 +934,56 @@ app.post('/api/admin/clean-expired-bookings', authenticate, requireAdmin, async 
     } catch (error) {
         console.error('Error cleaning expired bookings:', error);
         res.status(500).json({ success: false, message: 'Cleanup failed' });
+    }
+});
+
+// ============================================
+// ADMIN SEARCH ROUTES
+// ============================================
+
+// Search users
+app.get('/api/admin/users/search', authenticate, requireAdmin, async (req, res) => {
+    try {
+        const { q } = req.query;
+        const result = await executeQuery(`
+            SELECT ClientID, FirstName, LastName, Email, Phone, Role, CreatedAt, IsActive 
+            FROM Clients 
+            WHERE FirstName LIKE @param0 OR LastName LIKE @param0 OR Email LIKE @param0 OR CAST(ClientID AS VARCHAR) LIKE @param0
+            ORDER BY ClientID
+        `, [`%${q}%`]);
+        
+        res.json({ success: true, data: result.recordset || [] });
+    } catch (error) {
+        console.error('Error searching users:', error);
+        res.status(500).json({ success: false, message: 'Error searching users' });
+    }
+});
+
+// Search bookings
+app.get('/api/admin/bookings/search', authenticate, requireAdmin, async (req, res) => {
+    try {
+        const { q } = req.query;
+        const result = await executeQuery(`
+            SELECT b.BookingID, b.BookingDate, b.SeatNumber, b.TotalAmount, b.Status, b.PaymentStatus,
+                   c.FirstName, c.LastName, c.Email,
+                   t.TrainName, t.TrainNumber,
+                   dep.StationName AS DepartureStation, arr.StationName AS ArrivalStation,
+                   s.DepartureTime, s.ArrivalTime
+            FROM Bookings b
+            INNER JOIN Clients c ON b.ClientID = c.ClientID
+            INNER JOIN Schedule s ON b.ScheduleID = s.ScheduleID
+            INNER JOIN Trains t ON s.TrainID = t.TrainID
+            INNER JOIN Stations dep ON s.DepartureStation = dep.StationID
+            INNER JOIN Stations arr ON s.ArrivalStation = arr.StationID
+            WHERE c.FirstName LIKE @param0 OR c.LastName LIKE @param0 OR c.Email LIKE @param0 
+               OR CAST(b.BookingID AS VARCHAR) LIKE @param0
+            ORDER BY b.BookingDate DESC
+        `, [`%${q}%`]);
+        
+        res.json({ success: true, data: result.recordset || [] });
+    } catch (error) {
+        console.error('Error searching bookings:', error);
+        res.status(500).json({ success: false, message: 'Error searching bookings' });
     }
 });
 

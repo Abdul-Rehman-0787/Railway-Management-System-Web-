@@ -49,7 +49,11 @@ function AdminRefunds() {
         }
     };
 
-    if (loading) return <div>Loading...</div>;
+    if (loading) return (
+    <div className="loading-spinner">
+        💰 Loading refund requests...
+    </div>
+    );
 
     return (
         <div className="admin-refunds">

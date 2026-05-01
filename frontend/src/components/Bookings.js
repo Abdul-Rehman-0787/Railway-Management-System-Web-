@@ -77,7 +77,11 @@ function Bookings() {
         return <span className="badge">{bookingStatus}</span>;
     };
 
-    if (loading) return <div className="loading">Loading bookings...</div>;
+    if (loading) return (
+    <div className="bookings-loading">
+        🎫 Loading your bookings...
+    </div>
+    );
 
     return (
         <div className="bookings-container">

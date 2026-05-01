@@ -55,7 +55,12 @@ function MyPayments() {
         }
     };
 
-    if (loading) return <div className="loading">Loading payments...</div>;
+    if (loading) return (
+    <div className="loading-spinner">
+        💳 Loading pending payments...
+    </div>
+    );
+    
 
     return (
         <div className="my-payments-container">

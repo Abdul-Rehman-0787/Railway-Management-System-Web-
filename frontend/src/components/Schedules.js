@@ -37,7 +37,14 @@ function Schedules() {
         }
 
         if (!seatNumber) {
-            toast.error('Please enter seat number');
+            toast.error('Please enter a seat number');
+            return;
+        }
+
+        // Validate seat number format (optional but helpful)
+        const seatRegex = /^[A-Z][0-9]+$/i;  // e.g., A12, B08
+        if (!seatRegex.test(seatNumber)) {
+            toast.error('Invalid seat format. Use format like A12, B08');
             return;
         }
 
@@ -49,12 +56,10 @@ function Schedules() {
 
             if (response.data.success) {
                 const { bookingId, paymentExpiry } = response.data.data;
-                
-                // Close modal
                 setBookingModal(null);
                 setSeatNumber('');
                 
-                // Navigate to payment page with booking details
+                toast.success('Booking created! Proceed to payment.');
                 navigate('/payment', {
                     state: {
                         bookingId: bookingId,
@@ -65,12 +70,22 @@ function Schedules() {
                 });
             }
         } catch (error) {
-            toast.error(error.response?.data?.message || 'Booking failed');
+            // Better error message for duplicate seat
+            const errorMsg = error.response?.data?.message || 'Booking failed';
+            if (errorMsg.includes('duplicate') || errorMsg.includes('seat')) {
+                toast.error(`Seat ${seatNumber} is already booked. Please choose a different seat.`);
+            } else {
+                toast.error(errorMsg);
+            }
         }
     };
 
-    if (loading) return <div className="loading">Loading schedules...</div>;
-
+    if (loading) return (
+    <div className="schedules-loading">
+        🚂 Loading train schedules...
+    </div>
+    );
+    
     return (
         <div className="schedules-container">
             <h1>Train Schedules</h1>

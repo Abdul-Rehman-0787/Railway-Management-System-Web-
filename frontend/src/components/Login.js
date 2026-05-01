@@ -27,8 +27,12 @@ function Login() {
                 const userRole = user.role || 'User';
                 if (userRole === 'Admin') { 
                     navigate('/admin/dashboard');
+                    // Reload page after login
+                    window.location.href = user.role === 'Admin' ? '/admin/dashboard' : '/dashboard';
                 } else {
                     navigate('/dashboard');
+                    // Reload page after login
+                    window.location.href = user.role === 'Admin' ? '/admin/dashboard' : '/dashboard';
                 }
             } else {
                 toast.error(response.data.message || 'Login failed');

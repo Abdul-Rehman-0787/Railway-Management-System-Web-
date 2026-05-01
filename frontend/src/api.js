@@ -31,7 +31,9 @@ API.interceptors.response.use(
     }
 );
 
-// Auth APIs
+// ============================================
+// AUTH APIs
+// ============================================
 export const authAPI = {
     register: (data) => API.post('/auth/register', data),
     login: (data) => API.post('/auth/login', data),
@@ -39,7 +41,9 @@ export const authAPI = {
     logout: () => API.post('/auth/logout')
 };
 
-// Public APIs
+// ============================================
+// PUBLIC APIs
+// ============================================
 export const publicAPI = {
     getSchedules: () => API.get('/schedules'),
     getScheduleById: (id) => API.get(`/schedules/${id}`),
@@ -50,18 +54,63 @@ export const publicAPI = {
     contactSupport: (data) => API.post('/contact', data)
 };
 
-// Protected APIs (require auth)
+// ============================================
+// PROTECTED APIs (User)
+// ============================================
 export const protectedAPI = {
+    // Booking
     bookTicket: (data) => API.post('/bookings', data),
     getMyBookings: () => API.get('/my-bookings'),
     cancelBooking: (id, reason) => API.post(`/bookings/${id}/cancel`, { reason }),
     cancelPendingBooking: (id) => API.post(`/bookings/${id}/cancel-pending`),
     requestRefund: (id, reason) => API.post(`/bookings/${id}/request-refund`, { reason }),
+    
+    // Ratings & Loyalty
     submitRating: (data) => API.post('/ratings', data),
-    getLoyalty: () => API.get('/loyalty')
+    getLoyalty: () => API.get('/loyalty'),
+    
+    // User Messaging - New Functions
+    sendUserMessage: (subject, message) => API.post('/messages/send', { subject, message }),
+    sendFollowUp: (conversationId, message) => API.post(`/messages/${conversationId}/followup`, { message }),
+    getUserConversation: () => API.get('/messages/my-conversation'),
+    getConversationMessages: (conversationId) => API.get(`/messages/${conversationId}`)
 };
 
-// Helper functions
+// ============================================
+// ADMIN APIs
+// ============================================
+export const adminAPI = {
+    // User Management
+    getAllUsers: () => API.get('/admin/users'),
+    createAdmin: (data) => API.post('/admin/create', data),
+    searchUsers: (query) => API.get(`/admin/users/search?q=${query}`),
+    
+    // Booking Management
+    getAllBookings: () => API.get('/admin/bookings'),
+    updateBookingStatus: (bookingId, status, seatNumber) => API.put(`/admin/bookings/${bookingId}`, { status, seatNumber }),
+    searchBookings: (query) => API.get(`/admin/bookings/search?q=${query}`),
+    
+    // Refund Management
+    getRefundRequests: () => API.get('/admin/refund-requests'),
+    approveRefund: (id, comment) => API.post(`/admin/refund-requests/${id}/approve`, { comment }),
+    rejectRefund: (id, comment) => API.post(`/admin/refund-requests/${id}/reject`, { comment }),
+    
+    // Schedule Management
+    getSchedules: () => API.get('/admin/schedules'),
+    addSchedule: (data) => API.post('/admin/schedules', data),
+    updateSchedule: (id, data) => API.put(`/admin/schedules/${id}`, data),
+    deleteSchedule: (id) => API.delete(`/admin/schedules/${id}`),
+    
+    // Admin Messaging - New Functions
+    getAllConversations: () => API.get('/admin/messages/all'),
+    sendAdminReply: (conversationId, reply) => API.post(`/admin/messages/${conversationId}/reply`, { reply }),
+    getConversationDetail: (conversationId) => API.get(`/admin/messages/${conversationId}`),
+    getPendingMessages: () => API.get('/admin/messages/pending')
+};
+
+// ============================================
+// HELPER FUNCTIONS
+// ============================================
 export const isAuthenticated = () => !!localStorage.getItem('token');
 
 export const getCurrentUser = () => {
@@ -89,16 +138,6 @@ export const clearAuthData = () => {
 export const logout = () => {
     clearAuthData();
     window.location.href = '/login';
-};
-
-// Admin APIs
-export const adminAPI = {
-    getAllUsers: () => API.get('/admin/users'),
-    getAllBookings: () => API.get('/admin/bookings'),
-    createAdmin: (data) => API.post('/admin/create', data),
-    getRefundRequests: () => API.get('/admin/refund-requests'),
-    approveRefund: (id, comment) => API.post(`/admin/refund-requests/${id}/approve`, { comment }),
-    rejectRefund: (id, comment) => API.post(`/admin/refund-requests/${id}/reject`, { comment })
 };
 
 export default API;

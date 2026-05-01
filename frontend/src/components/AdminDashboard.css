@@ -1,5 +1,5 @@
 .admin-dashboard {
-    max-width: 1200px;
+    max-width: 1400px;
     margin: 0 auto;
     padding: 20px;
 }
@@ -16,13 +16,121 @@
     margin: 1.5rem 0 1rem;
 }
 
+/* Search Section */
+.search-section {
+    background: linear-gradient(135deg, #FFC107 0%, #FF5722 100%);
+    padding: 1.5rem;
+    border-radius: 16px;
+    margin-bottom: 2rem;
+}
+
+.search-section h3 {
+    margin: 0 0 1rem 0;
+    color: #212121;
+}
+
+.category-buttons {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+}
+
+.category-btn {
+    padding: 0.5rem 1.5rem;
+    border: none;
+    border-radius: 30px;
+    cursor: pointer;
+    font-weight: 600;
+    background: rgba(255,255,255,0.8);
+    color: #212121;
+    transition: all 0.3s;
+}
+
+.category-btn.active {
+    background: #212121;
+    color: #FFC107;
+}
+
+.category-btn:hover {
+    transform: translateY(-2px);
+}
+
+.search-input-group {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.search-input-group input {
+    flex: 1;
+    padding: 0.75rem 1rem;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    min-width: 200px;
+}
+
+.search-btn, .reset-btn {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s;
+}
+
+.search-btn {
+    background: #212121;
+    color: #FFC107;
+}
+
+.search-btn:hover {
+    background: #000;
+    transform: translateY(-2px);
+}
+
+.reset-btn {
+    background: rgba(255,255,255,0.8);
+    color: #212121;
+}
+
+.reset-btn:hover {
+    background: white;
+    transform: translateY(-2px);
+}
+
+/* Results Summary */
+.results-summary {
+    padding: 0.5rem 1rem;
+    margin-bottom: 1rem;
+    background: #f8fafc;
+    border-radius: 8px;
+}
+
+.results-summary p {
+    margin: 0;
+    color: #1e40af;
+}
+
+.no-results {
+    color: #dc2626 !important;
+}
+
+/* Table Responsive */
+.table-responsive {
+    overflow-x: auto;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
 .admin-table {
     width: 100%;
     border-collapse: collapse;
     background: white;
     border-radius: 12px;
     overflow: hidden;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 
 .admin-table th,
@@ -42,6 +150,7 @@
     background: #f9fafb;
 }
 
+/* Badges */
 .role-badge {
     display: inline-block;
     padding: 4px 8px;
@@ -60,7 +169,6 @@
     color: #1e40af;
 }
 
-/* Add to existing AdminDashboard.css */
 .booking-status {
     display: inline-block;
     padding: 4px 8px;
@@ -68,24 +176,224 @@
     font-size: 0.75rem;
     font-weight: 600;
 }
+
 .booking-status.confirmed {
     background: #dbeafe;
     color: #1e40af;
 }
+
 .booking-status.cancelled {
     background: #fee2e2;
     color: #991b1b;
 }
+
 .booking-status.completed {
     background: #dcfce7;
     color: #166534;
 }
-.loading, .error {
+
+.payment-status {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: 600;
+}
+
+.payment-status.pending {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.payment-status.paid {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.payment-status.refunded {
+    background: #dcfce7;
+    color: #166534;
+}
+
+/* Edit Button */
+.edit-booking-btn {
+    background: #3b82f6;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    transition: all 0.2s;
+}
+
+.edit-booking-btn:hover {
+    background: #2563eb;
+    transform: scale(1.05);
+}
+
+/* No Results Card */
+.no-results-card {
+    text-align: center;
+    padding: 3rem;
+    background: #f8fafc;
+    border-radius: 12px;
+    margin: 2rem 0;
+}
+
+.no-results-card h3 {
+    color: #1f2937;
+    margin-bottom: 0.5rem;
+}
+
+.no-results-card button {
+    margin-top: 1rem;
+    padding: 0.5rem 1.5rem;
+    background: #FF5722;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+/* Modal */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: white;
+    padding: 2rem;
+    border-radius: 16px;
+    width: 90%;
+    max-width: 500px;
+}
+
+.modal-content h3 {
+    margin-top: 0;
+    color: #1e3c72;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+.cancel-modal {
+    background: #e2e8f0;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.submit-edit {
+    background: #10b981;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+/* Loading Spinner - Updated to match theme */
+.loading-spinner {
+    text-align: center;
+    padding: 3rem;
+    font-size: 1.2rem;
+    background: linear-gradient(135deg, #FFC107 0%, #FF5722 100%);
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 0.6; }
+    50% { opacity: 1; }
+}
+
+.error {
     text-align: center;
     padding: 2rem;
     font-size: 1.2rem;
-    color: #6b7280;
-}
-.error {
     color: #ef4444;
+}
+/* Search Type Dropdown */
+.search-type-group {
+    margin-bottom: 1rem;
+}
+
+.search-type-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: #212121;
+}
+
+.search-type-select {
+    width: 100%;
+    max-width: 250px;
+    padding: 0.6rem 1rem;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    background: rgb(207, 114, 14);
+    cursor: pointer;
+}
+
+.search-hint {
+    margin-top: 0.5rem;
+}
+
+.hint-text {
+    font-size: 0.8rem;
+    color: rgba(33, 33, 33, 0.8);
+    background: rgba(255, 255, 255, 0.3);
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    display: inline-block;
+}
+
+/* ID Highlight */
+.id-highlight {
+    font-weight: 600;
+    color: #FF5722;
+    background: rgba(255, 87, 34, 0.1);
+    padding: 0.2rem 0.5rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+}
+
+/* Results Summary Enhancement */
+.results-summary {
+    padding: 0.75rem 1rem;
+    margin-bottom: 1.5rem;
+    background: linear-gradient(135deg, #FFC107 0%, #FF5722 100%);
+    border-radius: 8px;
+    color: #212121;
+}
+
+.results-summary p {
+    margin: 0;
+    font-weight: 500;
+}
+
+.results-summary strong {
+    background: #212121;
+    color: #FFC107;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.85rem;
 }

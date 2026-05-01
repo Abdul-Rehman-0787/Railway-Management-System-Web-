@@ -33,7 +33,11 @@ function Catalogue() {
         return amenities[trainType] || amenities.Default;
     };
 
-    if (loading) return <div className="loading">Loading catalogue...</div>;
+    if (loading) return (
+    <div className="loading-spinner">
+        📚 Loading catalogue...
+    </div>
+    );
 
     return (
         <div className="catalogue-container">

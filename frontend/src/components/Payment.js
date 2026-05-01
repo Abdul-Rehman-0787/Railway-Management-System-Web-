@@ -16,7 +16,7 @@ function Payment() {
         cvv: '',
         name: ''
     });
-
+    
     useEffect(() => {
         if (!bookingId) {
             navigate('/schedules');
@@ -88,6 +88,12 @@ function Payment() {
         }
     };
 
+    if (loading) return (
+    <div className="payment-loading">
+        💳 Processing payment...
+    </div>
+    );
+    
     return (
         <div className="payment-container">
             <div className="payment-card">

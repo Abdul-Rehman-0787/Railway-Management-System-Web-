@@ -177,7 +177,11 @@ function AdminSchedules() {
         return <span className={`status-badge ${statusClass[status] || 'status-scheduled'}`}>{status || 'Scheduled'}</span>;
     };
 
-    if (loading) return <div className="loading">Loading schedules...</div>;
+    if (loading) return (
+    <div className="loading-spinner">
+        🚆 Loading schedules...
+    </div>
+    );
 
     return (
         <div className="admin-schedules">

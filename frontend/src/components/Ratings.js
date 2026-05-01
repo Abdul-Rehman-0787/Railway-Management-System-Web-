@@ -79,7 +79,11 @@ function Ratings() {
         ));
     };
 
-    if (loading) return <div className="loading">Loading ratings...</div>;
+    if (loading) return (
+    <div className="loading-spinner">
+        ⭐ Loading ratings...
+    </div>
+    );
 
     return (
         <div className="ratings-container">

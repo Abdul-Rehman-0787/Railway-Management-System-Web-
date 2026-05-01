@@ -1,20 +1,34 @@
-# Requirement:
-* Page should be Reloaded after update.
-* For Admin there should be a contact_messages receiver page.
- Where he can reply to that message.
- For which we Need a Chat panel on user Side.
- This Chat panel can be open with a clickable button available on user dashboard.
- User can Only open this panel when he has a reply from admin.
- This will show only the message, for user text back a clickable button will appear which will get  him to contact page.
-* Booking Seats Restriction:
- (within offered seats).
-* Same seat Should not be Booked again.
-* After Expiry of Payment Booking should automatically be canceled.
-* In Admin Dashboard page Admin should be allowed to Update booking status:
- Only can cancel by complete refund.
- Can Update the seat.
-* In Admin Dashboard page Admin should be able to search any User by ID.
+# Requirements
 
-# Bonus:
-* We should have an trained AI Chatbot page or panel  to help user by talking to him.
- AI should not reveal admin actions or admin guidance.
+## 1. Page Reload
+- Page should be reloaded after update.
+
+## 2. Admin Contact Messages Receiver Page
+- Admin can reply to messages.
+- Requires a chat panel on user side.
+- Chat panel opens via clickable button on user dashboard.
+- User can only open panel when admin has replied.
+- Panel shows only the message; a clickable button appears for user to reply, directing them to contact page.
+
+## 3. Booking Seats Restriction
+- Within offered seats only.
+
+## 4. Prevent Double Booking
+- Same seat cannot be booked again.
+
+## 5. Payment Expiry
+- Booking automatically cancels after payment expiry.
+
+## 6. Admin Booking Management
+- Update booking status.
+- Cancel only with full refund.
+- Update seat assignment.
+
+## 7. Admin Search
+- Admin can search any user by ID.
+
+# Bonus
+
+## AI Chatbot
+- Trained AI chatbot page/panel to help users via conversation.
+- AI must not reveal admin actions or admin guidance.

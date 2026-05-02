@@ -1,122 +1,86 @@
 # 🚂 National Railway System
 
-> **A full-stack web application for end-to-end railway ticket booking, passenger management, loyalty rewards, refund processing, and admin–user communication.**
+> **A modern full-stack railway booking application with AI-powered chat assistance, passenger management, admin controls, loyalty rewards, refunds, and messaging.**
 
 ---
 
 ## 📖 Project Overview
 
-The **National Railway System** is a comprehensive full-stack web application designed to streamline train travel management for both passengers and administrators. Passengers can search for train schedules, book tickets with deferred payment, manage reservations, earn loyalty rewards, leave reviews, request refunds (subject to admin approval), and communicate with support staff — all from a single interface.
+The **National Railway System** is a complete web application designed for railway passengers and administrators.
 
-Administrators are equipped with a dedicated dashboard to manage schedules (add, edit, delete), approve or reject refund requests, manage bookings, and respond to support conversations.
+Passengers can:
+- browse train schedules,
+- book tickets,
+- manage reservations,
+- request refunds,
+- earn loyalty rewards,
+- leave reviews,
+- and interact with an AI travel assistant.
 
-Built using **React** on the frontend, **Node.js + Express** on the backend, and **Microsoft SQL Server** as the database engine, the system demonstrates modern full-stack development practices including:
+Admins can:
+- manage schedules,
+- review bookings,
+- approve or deny refunds,
+- monitor loyalty programs,
+- and respond to support conversations.
 
-- JWT-based authentication (Base64 encoded, stored in `localStorage`)
-- Role-based access control (User / Admin)
-- Deferred payment with automatic expiry (1 hr standard, 15 min if departure is imminent)
-- Admin approval workflows for refunds
-- A unified, stateful messaging system for support communications
-- Loyalty point accumulation with automatic tier upgrades
-- Cron-based background jobs for expired booking cleanup and auto-completion
-
----
-
-## ✨ Core Features
-
-### 🌐 Public Access (No Login Required)
-- View upcoming train schedules
-- Browse the train catalogue (with images and descriptions)
-- Read passenger ratings and reviews
-- Submit a contact/support message (automatically creates a support conversation)
-
----
-
-### 👤 User Access (Authenticated — Role: `User`)
-
-#### Account Management
-- Register a new account
-- Login and logout
-- View personal dashboard (loyalty points, tier, total spent, recent bookings)
-
-#### Ticket Booking & Payment
-- Search and browse available train schedules
-- Book tickets — booking immediately enters **Pending Payment** state
-  - Payment expiry: **1 hour** standard, or **15 minutes** if departure is within 1 hour
-- **My Payments** page: view all pending bookings, pay later, or cancel pending bookings
-- **My Bookings** page: view full booking history across all statuses (Paid, Pending, Refunded)
-
-#### Refund & Cancellation
-- **Cancel a Pending Booking**: immediate cancellation, seat released instantly
-- **Request a Refund** on a paid booking: routed to admin for approval, **30% deduction fee** applied on approval
-
-#### Messaging / Support
-- **My Messages** page: view full conversation history with support
-- Send a new support ticket
-- Receive and view admin replies
-- Send a follow-up message after the admin has replied
-
-#### Loyalty Program
-- Earn **10 loyalty points per 100 PKR** spent
-- Automatic tier upgrade based on point thresholds:
-  - 🥉 Bronze → 🥈 Silver (500 pts) → 🥇 Gold (2,000 pts) → 💎 Platinum (5,000 pts)
-
-#### Reviews
-- Rate and review completed train rides (1–5 stars)
+The system combines:
+- a **React** frontend,
+- a **Node.js + Express** backend,
+- a **Python AI assistant service**,
+- a **Microsoft SQL Server** database.
 
 ---
 
-### 🔐 Admin Access (Authenticated — Role: `Admin`)
+## ✨ What’s Included
 
-#### Dashboard
-- High-level overview of system activity
-- Search users/bookings by ID, Name, or Email
-
-#### Schedule Management *(fixed in v2.1)*
-- View all train schedules (including past and future) with full coach & pricing detail
-- **Add** new schedules — specify train, stations, departure/arrival times, seat/berth prices, and coach composition; total capacity is auto-calculated
-- **Edit** existing schedules — all fields (including coach counts and prices) pre-populate correctly in the edit modal
-- **Delete** schedules (blocked if confirmed bookings exist)
-
-#### Booking Management
-- View all bookings system-wide
-- Update booking status and seat number
-- Admin-cancel any booking with a reason
-
-#### Refund Request Management
-- View all pending refund requests
-- **Approve** a refund: triggers 30% fee deduction, seat released (if train has not yet departed), loyalty points adjusted
-- **Reject** a refund: optionally add a comment/reason for the passenger
-
-#### Support Conversation Management
-- View all support conversations (Pending and Replied)
-- Reply to user inquiries
-- Real-time status updates reflected for users
+- **AI chat assistant** with animated welcome screen and start button
+- **Full-page chatbot interface** in `frontend/src/pages/Chatbot.js`
+- **Separate Python AI service** in `backend/ai_chatbot/`
+- **Passenger and admin role-based workflows**
+- **Rich railway-themed UI** with header-matching accent colors and 3D visual polish
+- **Booking, refunds, loyalty, reviews, and messaging** support
 
 ---
 
-## 🔄 Unified Messaging Workflow
+## 🚀 Core Features
 
-The system uses a **single conversation per user** with a clearly defined state machine:
+### 🧠 AI Assistant
+- Robot welcome animation before chat begins
+- Start button opens the full chat interface
+- Dynamic chatbot UI with glassmorphism styling
+- Status banner when AI service is offline
 
-| Step | Action | Status |
-|------|--------|--------|
-| 1 | User sends a new message | `Pending` |
-| 2 | Admin replies | `Replied` — user sees both messages |
-| 3 | User sends a follow-up | Old reply is cleared → back to `Pending` |
+### 🌐 Public Access
+- Browse upcoming train schedules
+- View train catalogue and reviews
+- Submit support/contact messages
 
-> **Rule**: Users cannot send multiple messages while a message is pending. They must wait for an admin reply before sending a follow-up.
+### 👤 User Experience
+- Register and login
+- Personal dashboard with loyalty tier and booking summaries
+- Ticket booking and pending-payment flows
+- Cancel pending bookings or request refunds
+- Real-time messaging with support
+- Rating and review completed rides
+
+### 🔐 Admin Experience
+- View dashboard analytics
+- Manage schedules (add/edit/delete)
+- Oversee bookings and refunds
+- Reply to support conversations
 
 ---
 
-## 🛠️ Tech Stack
+## 🧩 Tech Stack
 
 | Layer | Technology |
 |-------|------------|
 | Frontend | React 18, React Router DOM, Axios, React Hot Toast, React Icons, CSS3 |
 | Backend | Node.js, Express, bcryptjs, dotenv, mssql, node-cron |
-| Database | Microsoft SQL Server (LocalDB / Express Edition) |
-| Authentication | JWT (Base64 encoded), stored in `localStorage` |
+| AI Assistant | Python, custom chatbot API, Chroma/FAISS knowledge store |
+| Database | Microsoft SQL Server |
+| Authentication | JWT stored in `localStorage` |
 | Build Tools | Create React App, Nodemon |
 
 ---
@@ -124,119 +88,102 @@ The system uses a **single conversation per user** with a clearly defined state 
 ## 📁 Project Structure
 
 ```
-railway-management-system/
+RailwaySystem/
 │
 ├── backend/
+│   ├── ai_chatbot/              # Python AI assistant service
+│   │   ├── chatbot_api.py
+│   │   ├── chroma_store.py
+│   │   ├── embeddings.py
+│   │   ├── knowledge_base.json
+│   │   ├── requirements.txt
+│   │   ├── .env
+│   │   └── venv/
 │   ├── config/
-│   │   └── database.js          # SQL Server connection pool & helper functions
-│   ├── .env                     # Environment variables (PORT, DB_NAME)
+│   │   └── database.js          # SQL Server connection helper
 │   ├── package.json
-│   ├── server.js                # All API route handlers and middleware
+│   ├── server.js                # Main Express backend API
 │   └── node_modules/
 │
 ├── frontend/
 │   ├── public/
 │   │   └── index.html
 │   ├── src/
-│   │   ├── assets/              # Logo and static images
+│   │   ├── api.js               # Axios helpers and auth utilities
+│   │   ├── App.js               # App routing and layout
+│   │   ├── App.css
+│   │   ├── index.js
+│   │   ├── index.css
+│   │   ├── pages/
+│   │   │   ├── Chatbot.js       # Full-page AI chat interface
+│   │   │   ├── Chatbot.css
+│   │   │   └── ... other page files
 │   │   ├── components/
-│   │   │   ├── AdminDashboard.js
-│   │   │   ├── AdminMessages.js
-│   │   │   ├── AdminRefunds.js
-│   │   │   ├── AdminSchedules.js   ← fixed in v2.1
-│   │   │   ├── AdminSchedules.css
-│   │   │   ├── Bookings.js
-│   │   │   ├── Catalogue.js
-│   │   │   ├── Contact.js
-│   │   │   ├── Dashboard.js
-│   │   │   ├── Footer.js
 │   │   │   ├── Header.js
 │   │   │   ├── Layout.js
 │   │   │   ├── Login.js
-│   │   │   ├── MyPayments.js
-│   │   │   ├── Payment.js
-│   │   │   ├── Ratings.js
-│   │   │   ├── Schedules.js
 │   │   │   ├── Signup.js
-│   │   │   └── UserMessages.js
-│   │   ├── api.js               # Axios instance and auth helper functions
-│   │   ├── App.js               # Routing with role-based route guards
-│   │   ├── App.css
-│   │   ├── index.js
-│   │   └── index.css
+│   │   │   ├── Dashboard.js
+│   │   │   ├── MyPayments.js
+│   │   │   ├── UserMessages.js
+│   │   │   ├── AdminDashboard.js
+│   │   │   ├── AdminSchedules.js
+│   │   │   └── ...
 │   ├── package.json
 │   └── node_modules/
 │
-├── database.sql                 # Complete DB schema, stored procedures, triggers, seed data
-├── schedule_fix_patch.sql       # ← Patch to fix admin schedule Add/Edit (run this if upgrading)
+├── database.sql                 # Database schema and seed data
+├── LICENSE
 └── README.md
 ```
 
 ---
 
-## 🗄️ Database Schema
+## 🧪 Setup & Run
 
-### Tables
+### 1. Run the backend API
+```bash
+cd backend
+npm install
+npm run dev
+```
 
-| Table | Description |
-|-------|-------------|
-| `Clients` | User accounts — first name, last name, email, password hash, role, etc. |
-| `Stations` | Railway stations — name, city, province |
-| `Trains` | Train details — name, number, total seats, type, default pricing |
-| `Schedule` | Train ride instances — departure/arrival stations, times, per-journey seat/berth prices, coach counts, available seats |
-| `Bookings` | Ticket reservations — client, schedule, seat number, status, payment status, expiry |
-| `Payments` | Payment records linked to individual bookings |
-| `Cancellations` | Cancellation records with refund amount and status |
-| `Ratings` | User ratings and reviews (1–5 stars) with comments |
-| `LoyaltyRewards` | Points balance and tier per client |
-| `RewardTransactions` | Audit log of all points earned and redeemed |
-| `Catalogue` | Marketing content (images, descriptions) per train |
-| `RefundRequests` | Refund requests with admin approval/rejection workflow |
-| `Conversations` | Unified messaging — one conversation per user with status tracking |
+### 2. Run the AI assistant service
+```bash
+cd backend/ai_chatbot
+python -m venv venv
+.\venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+python chatbot_api.py
+```
 
-> **Coach layout (per-schedule):** Seat/berth prices and coach counts (`SleeperCoaches`, `SeaterCoaches`) are stored on the `Schedule` table, not on `Trains`. This allows each journey to have its own composition.
+### 3. Run the frontend
+```bash
+cd frontend
+npm install
+npm start
+```
 
----
-
-### Stored Procedures
-
-| Procedure | Description |
-|-----------|-------------|
-| `sp_RegisterClient` | Creates a new user account and initialises their loyalty record |
-| `sp_LoginClient` | Returns user data for authentication |
-| `sp_GetAllSchedules` | Fetches upcoming scheduled trains for the public view (includes `SeatPrice`, `BerthPrice`, `SleeperCoaches`, `SeaterCoaches`) |
-| `sp_GetScheduleByID` | Returns a single schedule by ID with full detail |
-| `sp_GetAllSchedulesAdmin` | Returns **all** schedules (past and future) with `DepartureStationID`, `ArrivalStationID`, `SleeperCoaches`, `SeaterCoaches`, `SeatPrice`, `BerthPrice` — used by the admin manage-schedules page |
-| `sp_AddSchedule` | Inserts a new schedule; auto-calculates `AvailableSeats` from coach counts; validates stations differ and arrival > departure |
-| `sp_UpdateSchedule` | Updates an existing schedule; recalculates `AvailableSeats` minus booked count; validates constraints |
-| `sp_DeleteSchedule` | Deletes a schedule (blocked if confirmed bookings exist) |
-| `sp_GetTrainConfig` | Returns train pricing only (`SeatPrice`, `BerthPrice`) |
-| `sp_UpdateTrainConfig` | Updates default train pricing |
-| `sp_BookTicket` | Creates a booking with payment expiry timer and reserves the seat |
-| `sp_ConfirmPayment` | Marks booking as paid and adds loyalty points |
-| `sp_CancelPendingBooking` | Releases reserved seat and cancels a pending booking |
-| `sp_CancelBooking` | Cancels a confirmed (paid) booking |
-| `sp_AdminCancelBooking` | Admin-initiated booking cancellation |
-| `sp_RequestRefund` | Creates a refund request pending admin review |
-| `sp_ApproveRefund` | Approves a refund request with 30% fee deduction |
-| `sp_RejectRefund` | Rejects a refund request (with optional admin comment) |
-| `sp_GetClientBookings` | Returns all bookings for a user including payment status |
-| `sp_GetClientLoyalty` | Returns current loyalty points balance and tier |
-| `sp_SendUserMessage` | Creates or continues a user-initiated support conversation |
-| `sp_CancelExpiredPendingBookings` | Cron-invoked — cancels bookings whose payment expiry has passed |
-| `sp_AutoCompleteBookings` | Cron-invoked — marks confirmed bookings as Completed after departure |
+> The frontend proxies requests to `http://localhost:5000`.
 
 ---
 
-### Triggers
+## 🔧 Notes
 
-| Trigger | Description |
-|---------|-------------|
-| `trg_UpdateLoyaltyTier` | Fires after loyalty points update — automatically upgrades user tier when thresholds are crossed (500 → Silver, 2,000 → Gold, 5,000 → Platinum) |
+- Start the AI assistant service before using the chatbot page.
+- If the AI engine is not running, the chatbot shows an offline banner.
+- The app supports both `User` and `Admin` roles.
+- Database schema and seed data are available in `database.sql`.
 
 ---
 
-### Indexes
+## 📌 Highlights
+
+- Full-page **AI chatbot** with animated robot launch screen
+- **Header-contrast colors** matching the railway branding
+- Clean separation of frontend, backend, and AI service layers
+- Comprehensive support for bookings, refunds, loyalty, reviews, and messaging
+
 
 Indexes are created on the following columns for query performance:
 

@@ -397,3 +397,24 @@
     border-radius: 4px;
     font-size: 0.85rem;
 }
+/* Admin Dashboard Payment Badges */
+.payment-refunded-admin {
+    background: #10b981;
+    color: white;
+}
+
+.payment-refunded-user {
+    background: #f59e0b;
+    color: white;
+}
+
+/* User Bookings Page Badges */
+.badge.refunded-admin {
+    background: #10b981;
+    color: white;
+}
+
+.badge.refunded-user {
+    background: #f59e0b;
+    color: white;
+}

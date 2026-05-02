@@ -1,9 +1,9 @@
 -- =====================================================
 -- RAILWAY MANAGEMENT SYSTEM – COMPLETE DATABASE SCRIPT
 -- =====================================================
--- This script creates a fresh database with all tables,
--- stored procedures, triggers, and sample data.
 -- Run this ONCE in SQL Server Management Studio.
+-- This will create a fresh database with all tables,
+-- stored procedures, triggers, and sample data.
 -- =====================================================
 
 USE master;
@@ -20,6 +20,7 @@ GO
 -- Create new database
 CREATE DATABASE RailwayManagementSystem;
 GO
+
 USE RailwayManagementSystem;
 GO
 
@@ -27,7 +28,6 @@ GO
 -- TABLES
 -- =====================================================
 
--- Users table
 CREATE TABLE Clients (
     ClientID      INT IDENTITY(1,1) PRIMARY KEY,
     FirstName     VARCHAR(50)  NOT NULL,
@@ -43,7 +43,6 @@ CREATE TABLE Clients (
     IsActive      BIT          DEFAULT 1
 );
 
--- Stations table
 CREATE TABLE Stations (
     StationID   INT IDENTITY(1,1) PRIMARY KEY,
     StationName VARCHAR(100) NOT NULL,
@@ -53,18 +52,18 @@ CREATE TABLE Stations (
     IsActive    BIT DEFAULT 1
 );
 
--- Trains table
 CREATE TABLE Trains (
-    TrainID     INT IDENTITY(1,1) PRIMARY KEY,
-    TrainName   VARCHAR(100) NOT NULL,
-    TrainNumber VARCHAR(20)  NOT NULL UNIQUE,
-    TotalSeats  INT          NOT NULL,
-    AvailableSeats INT       NOT NULL,
-    TrainType   VARCHAR(50),
-    IsActive    BIT DEFAULT 1
+    TrainID             INT IDENTITY(1,1) PRIMARY KEY,
+    TrainName           VARCHAR(100) NOT NULL,
+    TrainNumber         VARCHAR(20)  NOT NULL UNIQUE,
+    TrainType           VARCHAR(50),
+    TotalSeats          INT          NOT NULL DEFAULT 0,
+    AvailableSeats      INT          NOT NULL DEFAULT 0,
+    SeatPrice           DECIMAL(8,2) DEFAULT 500,
+    BerthPrice          DECIMAL(8,2) DEFAULT 1000,
+    IsActive            BIT          DEFAULT 1
 );
 
--- Schedule table
 CREATE TABLE Schedule (
     ScheduleID       INT IDENTITY(1,1) PRIMARY KEY,
     TrainID          INT          NOT NULL,
@@ -72,7 +71,11 @@ CREATE TABLE Schedule (
     ArrivalStation   INT          NOT NULL,
     DepartureTime    DATETIME     NOT NULL,
     ArrivalTime      DATETIME     NOT NULL,
-    TicketPrice      DECIMAL(8,2) NOT NULL,
+    TicketPrice      DECIMAL(8,2) NOT NULL DEFAULT 0,
+    SeatPrice        DECIMAL(8,2) NOT NULL DEFAULT 500,
+    BerthPrice       DECIMAL(8,2) NOT NULL DEFAULT 1000,
+    SleeperCoaches   INT          NOT NULL DEFAULT 2,
+    SeaterCoaches    INT          NOT NULL DEFAULT 6,
     AvailableSeats   INT          NOT NULL,
     Status           VARCHAR(20)  DEFAULT 'Scheduled',
     CONSTRAINT FK_Schedule_Train FOREIGN KEY (TrainID) REFERENCES Trains(TrainID) ON DELETE CASCADE,
@@ -82,7 +85,6 @@ CREATE TABLE Schedule (
     CONSTRAINT CHK_Arrival_After CHECK (ArrivalTime > DepartureTime)
 );
 
--- Bookings table
 CREATE TABLE Bookings (
     BookingID       INT IDENTITY(1,1) PRIMARY KEY,
     ClientID        INT          NOT NULL,
@@ -94,11 +96,11 @@ CREATE TABLE Bookings (
     PaymentStatus   VARCHAR(20)  DEFAULT 'Pending',
     PaymentIntentId VARCHAR(100) NULL,
     PaymentExpiry   DATETIME     NULL,
+    BookingType     VARCHAR(10)  DEFAULT 'seat',
     CONSTRAINT FK_Bookings_Client FOREIGN KEY (ClientID) REFERENCES Clients(ClientID) ON DELETE CASCADE,
     CONSTRAINT FK_Bookings_Schedule FOREIGN KEY (ScheduleID) REFERENCES Schedule(ScheduleID)
 );
 
--- Payments table
 CREATE TABLE Payments (
     PaymentID     INT IDENTITY(1,1) PRIMARY KEY,
     BookingID     INT          NOT NULL,
@@ -110,7 +112,6 @@ CREATE TABLE Payments (
     CONSTRAINT FK_Payments_Booking FOREIGN KEY (BookingID) REFERENCES Bookings(BookingID) ON DELETE CASCADE
 );
 
--- Cancellations table
 CREATE TABLE Cancellations (
     CancellationID   INT IDENTITY(1,1) PRIMARY KEY,
     BookingID        INT      NOT NULL,
@@ -121,7 +122,6 @@ CREATE TABLE Cancellations (
     CONSTRAINT FK_Cancellations_Booking FOREIGN KEY (BookingID) REFERENCES Bookings(BookingID) ON DELETE CASCADE
 );
 
--- Ratings table
 CREATE TABLE Ratings (
     RatingID    INT IDENTITY(1,1) PRIMARY KEY,
     ClientID    INT          NOT NULL,
@@ -134,7 +134,6 @@ CREATE TABLE Ratings (
     CONSTRAINT CHK_Rating_Range CHECK (Rating BETWEEN 1 AND 5)
 );
 
--- Loyalty Rewards table
 CREATE TABLE LoyaltyRewards (
     RewardID     INT IDENTITY(1,1) PRIMARY KEY,
     ClientID     INT          NOT NULL,
@@ -144,7 +143,6 @@ CREATE TABLE LoyaltyRewards (
     CONSTRAINT FK_Loyalty_Client FOREIGN KEY (ClientID) REFERENCES Clients(ClientID) ON DELETE CASCADE
 );
 
--- Reward Transactions table
 CREATE TABLE RewardTransactions (
     TransactionID   INT IDENTITY(1,1) PRIMARY KEY,
     ClientID        INT          NOT NULL,
@@ -156,7 +154,6 @@ CREATE TABLE RewardTransactions (
     CONSTRAINT FK_RewardTx_Booking FOREIGN KEY (BookingID) REFERENCES Bookings(BookingID)
 );
 
--- Catalogue table
 CREATE TABLE Catalogue (
     CatalogueID   INT IDENTITY(1,1) PRIMARY KEY,
     TrainID       INT          NOT NULL,
@@ -166,7 +163,6 @@ CREATE TABLE Catalogue (
     CONSTRAINT FK_Catalogue_Train FOREIGN KEY (TrainID) REFERENCES Trains(TrainID) ON DELETE CASCADE
 );
 
--- Refund Requests table
 CREATE TABLE RefundRequests (
     RequestID       INT IDENTITY(1,1) PRIMARY KEY,
     BookingID       INT NOT NULL,
@@ -183,9 +179,6 @@ CREATE TABLE RefundRequests (
     CONSTRAINT FK_Refund_Client FOREIGN KEY (ClientID) REFERENCES Clients(ClientID)
 );
 
--- =====================================================
--- UNIFIED CONVERSATIONS TABLE (Replaces ContactSupport)
--- =====================================================
 CREATE TABLE Conversations (
     ConversationID  INT IDENTITY(1,1) PRIMARY KEY,
     UserID          INT NOT NULL,
@@ -216,7 +209,7 @@ CREATE UNIQUE INDEX IX_Unique_SeatPerSchedule ON Bookings(ScheduleID, SeatNumber
 GO
 
 -- =====================================================
--- STORED PROCEDURES - AUTH & BOOKINGS
+-- STORED PROCEDURES
 -- =====================================================
 
 -- Register client
@@ -253,7 +246,8 @@ GO
 CREATE OR ALTER PROCEDURE sp_GetAllSchedules
 AS
 BEGIN
-    SELECT s.ScheduleID, t.TrainName, t.TrainNumber, t.TrainType,
+    SELECT s.ScheduleID, s.TrainID, t.TrainName, t.TrainNumber, t.TrainType,
+           s.SeatPrice, s.BerthPrice, s.SleeperCoaches, s.SeaterCoaches,
            dep.StationName AS DepartureStation, arr.StationName AS ArrivalStation,
            s.DepartureTime, s.ArrivalTime, s.TicketPrice, s.AvailableSeats, s.Status
     FROM Schedule s
@@ -270,6 +264,7 @@ CREATE OR ALTER PROCEDURE sp_GetScheduleByID @ScheduleID INT
 AS
 BEGIN
     SELECT s.ScheduleID, s.TrainID, t.TrainName, t.TrainNumber, t.TrainType,
+           s.SeatPrice, s.BerthPrice, s.SleeperCoaches, s.SeaterCoaches,
            dep.StationName AS DepartureStation, arr.StationName AS ArrivalStation,
            s.DepartureTime, s.ArrivalTime, s.TicketPrice, s.AvailableSeats, s.Status
     FROM Schedule s
@@ -280,30 +275,156 @@ BEGIN
 END
 GO
 
+-- Get train config (pricing only)
+CREATE OR ALTER PROCEDURE sp_GetTrainConfig @TrainID INT
+AS
+BEGIN
+    SELECT TrainID, TrainName, TrainNumber, TrainType, SeatPrice, BerthPrice
+    FROM Trains WHERE TrainID = @TrainID;
+END
+GO
+
+-- Update train pricing
+CREATE OR ALTER PROCEDURE sp_UpdateTrainConfig
+    @TrainID INT,
+    @SeatPrice DECIMAL(8,2),
+    @BerthPrice DECIMAL(8,2)
+AS
+BEGIN
+    UPDATE Trains
+    SET SeatPrice = @SeatPrice,
+        BerthPrice = @BerthPrice
+    WHERE TrainID = @TrainID;
+    SELECT 1 AS Success, 'Train pricing updated successfully' AS Message;
+END
+GO
+
+-- Get all schedules for admin
+CREATE OR ALTER PROCEDURE sp_GetAllSchedulesAdmin
+AS
+BEGIN
+    SELECT s.ScheduleID, t.TrainID, t.TrainName, t.TrainNumber, t.TrainType,
+           s.SeatPrice, s.BerthPrice,
+           dep.StationID AS DepartureStationID, dep.StationName AS DepartureStation,
+           arr.StationID AS ArrivalStationID, arr.StationName AS ArrivalStation,
+           s.DepartureTime, s.ArrivalTime, s.TicketPrice,
+           s.SleeperCoaches, s.SeaterCoaches, s.AvailableSeats, s.Status
+    FROM Schedule s
+    INNER JOIN Trains t ON s.TrainID = t.TrainID
+    INNER JOIN Stations dep ON s.DepartureStation = dep.StationID
+    INNER JOIN Stations arr ON s.ArrivalStation = arr.StationID
+    ORDER BY s.DepartureTime DESC;
+END
+GO
+
+-- Add schedule
+CREATE OR ALTER PROCEDURE sp_AddSchedule
+    @TrainID INT, @DepartureStationID INT, @ArrivalStationID INT,
+    @DepartureTime DATETIME, @ArrivalTime DATETIME,
+    @SeatPrice DECIMAL(8,2), @BerthPrice DECIMAL(8,2),
+    @SleeperCoaches INT, @SeaterCoaches INT, @Status VARCHAR(20)
+AS
+BEGIN
+    -- Capacity: Berth coach = 5 compartments × (6 berths + 2 seats) = 40 total per coach
+    --           Seater coach = 5 compartments × (6 seats + 2 berths) = 40 total per coach
+    DECLARE @TotalCapacity INT = (@SleeperCoaches + @SeaterCoaches) * 40;
+
+    INSERT INTO Schedule (TrainID, DepartureStation, ArrivalStation, DepartureTime, ArrivalTime,
+                          TicketPrice, SeatPrice, BerthPrice, SleeperCoaches, SeaterCoaches, AvailableSeats, Status)
+    VALUES (@TrainID, @DepartureStationID, @ArrivalStationID, @DepartureTime, @ArrivalTime,
+            0, @SeatPrice, @BerthPrice, @SleeperCoaches, @SeaterCoaches, @TotalCapacity, @Status);
+
+    SELECT 1 AS Success, 'Schedule added successfully' AS Message, SCOPE_IDENTITY() AS ScheduleID;
+END
+GO
+
+-- Update schedule
+CREATE OR ALTER PROCEDURE sp_UpdateSchedule
+    @ScheduleID INT, @TrainID INT, @DepartureStationID INT, @ArrivalStationID INT,
+    @DepartureTime DATETIME, @ArrivalTime DATETIME,
+    @SeatPrice DECIMAL(8,2), @BerthPrice DECIMAL(8,2),
+    @SleeperCoaches INT, @SeaterCoaches INT, @Status VARCHAR(20)
+AS
+BEGIN
+    DECLARE @TotalCapacity INT = (@SleeperCoaches + @SeaterCoaches) * 40;
+    DECLARE @BookedCount INT;
+    
+    SELECT @BookedCount = COUNT(*) FROM Bookings
+    WHERE ScheduleID = @ScheduleID AND Status IN ('Confirmed', 'Pending');
+
+    DECLARE @NewAvailable INT = @TotalCapacity - @BookedCount;
+    IF @NewAvailable < 0 SET @NewAvailable = 0;
+
+    UPDATE Schedule SET
+        TrainID = @TrainID,
+        DepartureStation = @DepartureStationID,
+        ArrivalStation = @ArrivalStationID,
+        DepartureTime = @DepartureTime,
+        ArrivalTime = @ArrivalTime,
+        TicketPrice = 0,
+        SeatPrice = @SeatPrice,
+        BerthPrice = @BerthPrice,
+        SleeperCoaches = @SleeperCoaches,
+        SeaterCoaches = @SeaterCoaches,
+        AvailableSeats = @NewAvailable,
+        Status = @Status
+    WHERE ScheduleID = @ScheduleID;
+
+    SELECT 1 AS Success, 'Schedule updated successfully' AS Message;
+END
+GO
+
+-- Delete schedule
+CREATE OR ALTER PROCEDURE sp_DeleteSchedule @ScheduleID INT
+AS
+BEGIN
+    IF EXISTS (SELECT 1 FROM Bookings WHERE ScheduleID = @ScheduleID AND Status = 'Confirmed')
+        SELECT 0 AS Success, 'Cannot delete schedule with confirmed bookings' AS Message;
+    ELSE
+    BEGIN
+        DELETE FROM Schedule WHERE ScheduleID = @ScheduleID;
+        SELECT 1 AS Success, 'Schedule deleted successfully' AS Message;
+    END
+END
+GO
+
 -- Book ticket
 CREATE OR ALTER PROCEDURE sp_BookTicket
-    @ClientID INT, @ScheduleID INT, @SeatNumber VARCHAR(10)
+    @ClientID INT, @ScheduleID INT, @SeatNumber VARCHAR(10),
+    @BookingType VARCHAR(10) = 'seat', @Price DECIMAL(8,2)
 AS
 BEGIN
     SET NOCOUNT ON;
     BEGIN TRANSACTION;
-    DECLARE @TicketPrice DECIMAL(8,2), @AvailableSeats INT, @DepartureTime DATETIME;
-    SELECT @TicketPrice = TicketPrice, @AvailableSeats = AvailableSeats, @DepartureTime = DepartureTime
+
+    DECLARE @AvailableSeats INT, @DepartureTime DATETIME;
+    SELECT @AvailableSeats = AvailableSeats, @DepartureTime = DepartureTime
     FROM Schedule WHERE ScheduleID = @ScheduleID;
+
     IF @AvailableSeats <= 0
     BEGIN
         SELECT 0 AS Success, 'No seats available' AS Message;
         ROLLBACK; RETURN;
     END
+
+    IF EXISTS (SELECT 1 FROM Bookings WHERE ScheduleID = @ScheduleID AND SeatNumber = @SeatNumber AND Status IN ('Confirmed', 'Pending'))
+    BEGIN
+        SELECT 0 AS Success, 'Seat already booked' AS Message;
+        ROLLBACK; RETURN;
+    END
+
     DECLARE @PaymentExpiry DATETIME;
     IF DATEDIFF(HOUR, GETDATE(), @DepartureTime) < 1
         SET @PaymentExpiry = DATEADD(MINUTE, 15, GETDATE());
     ELSE
         SET @PaymentExpiry = DATEADD(HOUR, 1, GETDATE());
-    INSERT INTO Bookings (ClientID, ScheduleID, SeatNumber, TotalAmount, Status, PaymentStatus, PaymentExpiry)
-    VALUES (@ClientID, @ScheduleID, @SeatNumber, @TicketPrice, 'Pending', 'Pending', @PaymentExpiry);
+
+    INSERT INTO Bookings (ClientID, ScheduleID, SeatNumber, TotalAmount, Status, PaymentStatus, PaymentExpiry, BookingType)
+    VALUES (@ClientID, @ScheduleID, @SeatNumber, @Price, 'Pending', 'Pending', @PaymentExpiry, @BookingType);
+
     DECLARE @BookingID INT = SCOPE_IDENTITY();
     UPDATE Schedule SET AvailableSeats = AvailableSeats - 1 WHERE ScheduleID = @ScheduleID;
+
     SELECT 1 AS Success, 'Booking created, proceed to payment' AS Message, @BookingID AS BookingID, @PaymentExpiry AS PaymentExpiry;
     COMMIT;
 END
@@ -315,11 +436,18 @@ AS
 BEGIN
     SET NOCOUNT ON;
     BEGIN TRANSACTION;
+    
     DECLARE @ClientID INT, @TotalAmount DECIMAL(8,2), @ScheduleID INT, @PaymentExpiry DATETIME;
+    
     SELECT @ClientID = ClientID, @TotalAmount = TotalAmount, @ScheduleID = ScheduleID, @PaymentExpiry = PaymentExpiry
     FROM Bookings WHERE BookingID = @BookingID AND PaymentStatus = 'Pending';
+    
     IF @ClientID IS NULL
-    BEGIN SELECT 0 AS Success, 'Booking not found or already paid/cancelled' AS Message; ROLLBACK; RETURN; END
+    BEGIN
+        SELECT 0 AS Success, 'Booking not found or already paid/cancelled' AS Message;
+        ROLLBACK; RETURN;
+    END
+    
     IF @PaymentExpiry < GETDATE()
     BEGIN
         UPDATE Schedule SET AvailableSeats = AvailableSeats + 1 WHERE ScheduleID = @ScheduleID;
@@ -327,12 +455,17 @@ BEGIN
         SELECT 0 AS Success, 'Payment window expired. Booking cancelled.' AS Message;
         ROLLBACK; RETURN;
     END
+    
     UPDATE Bookings SET PaymentStatus = 'Paid', Status = 'Confirmed', PaymentIntentId = @PaymentIntentId, BookingDate = GETDATE()
     WHERE BookingID = @BookingID;
+    
     DECLARE @PointsEarned INT = @TotalAmount / 10;
     UPDATE LoyaltyRewards SET TotalPoints = TotalPoints + @PointsEarned, LastUpdated = GETDATE() WHERE ClientID = @ClientID;
-    INSERT INTO RewardTransactions (ClientID, BookingID, PointsChanged, TransactionType) VALUES (@ClientID, @BookingID, @PointsEarned, 'Earned');
-    INSERT INTO Payments (BookingID, Amount, PaymentMethod, PaymentStatus, TransactionRef) VALUES (@BookingID, @TotalAmount, 'Card', 'Paid', @PaymentIntentId);
+    INSERT INTO RewardTransactions (ClientID, BookingID, PointsChanged, TransactionType) 
+    VALUES (@ClientID, @BookingID, @PointsEarned, 'Earned');
+    INSERT INTO Payments (BookingID, Amount, PaymentMethod, PaymentStatus, TransactionRef) 
+    VALUES (@BookingID, @TotalAmount, 'Card', 'Paid', @PaymentIntentId);
+    
     SELECT 1 AS Success, 'Payment confirmed, booking successful' AS Message;
     COMMIT;
 END
@@ -344,48 +477,78 @@ AS
 BEGIN
     SET NOCOUNT ON;
     BEGIN TRANSACTION;
+    
     DECLARE @ScheduleID INT, @PaymentStatus VARCHAR(20);
     SELECT @ScheduleID = ScheduleID, @PaymentStatus = PaymentStatus FROM Bookings WHERE BookingID = @BookingID;
+    
     IF @PaymentStatus != 'Pending'
-    BEGIN SELECT 0 AS Success, 'Only pending bookings can be cancelled this way' AS Message; ROLLBACK; RETURN; END
+    BEGIN
+        SELECT 0 AS Success, 'Only pending bookings can be cancelled this way' AS Message;
+        ROLLBACK; RETURN;
+    END
+    
     UPDATE Schedule SET AvailableSeats = AvailableSeats + 1 WHERE ScheduleID = @ScheduleID;
     UPDATE Bookings SET Status = 'Cancelled', PaymentStatus = 'Failed' WHERE BookingID = @BookingID;
+    
     SELECT 1 AS Success, 'Pending booking cancelled' AS Message;
     COMMIT;
 END
 GO
 
--- Cancel confirmed booking
-CREATE OR ALTER PROCEDURE sp_CancelBooking @BookingID INT, @Reason VARCHAR(255)
+-- Admin cancel booking (100% full refund)
+CREATE OR ALTER PROCEDURE sp_AdminCancelBooking
+    @BookingID INT, @Reason VARCHAR(500)
 AS
 BEGIN
     SET NOCOUNT ON;
     BEGIN TRANSACTION;
+    
     DECLARE @ClientID INT, @ScheduleID INT, @TotalAmount DECIMAL(8,2);
+    
     SELECT @ClientID = ClientID, @ScheduleID = ScheduleID, @TotalAmount = TotalAmount
-    FROM Bookings WHERE BookingID = @BookingID AND Status = 'Confirmed' AND PaymentStatus = 'Paid';
+    FROM Bookings WHERE BookingID = @BookingID AND PaymentStatus = 'Paid';
+    
     IF @ClientID IS NULL
-    BEGIN SELECT 0 AS Success, 'Booking not found or not eligible for cancellation' AS Message; ROLLBACK; RETURN; END
-    UPDATE Bookings SET Status = 'Cancelled' WHERE BookingID = @BookingID;
-    UPDATE Schedule SET AvailableSeats = AvailableSeats + 1 WHERE ScheduleID = @ScheduleID;
-    INSERT INTO Cancellations (BookingID, Reason, RefundAmount, RefundStatus) VALUES (@BookingID, @Reason, @TotalAmount, 'Pending');
-    DECLARE @PointsDeducted INT = @TotalAmount / 10;
-    UPDATE LoyaltyRewards SET TotalPoints = CASE WHEN TotalPoints >= @PointsDeducted THEN TotalPoints - @PointsDeducted ELSE 0 END, LastUpdated = GETDATE() WHERE ClientID = @ClientID;
-    INSERT INTO RewardTransactions (ClientID, BookingID, PointsChanged, TransactionType) VALUES (@ClientID, @BookingID, -@PointsDeducted, 'Redeemed');
-    SELECT 1 AS Success, 'Booking cancelled successfully' AS Message;
+    BEGIN
+        SELECT 0 AS Success, 'Booking not found or not paid' AS Message;
+        ROLLBACK; RETURN;
+    END
+    
+    UPDATE Bookings SET Status = 'Cancelled', PaymentStatus = 'Refunded_Admin' WHERE BookingID = @BookingID;
+    
+    DECLARE @DepartureTime DATETIME;
+    SELECT @DepartureTime = DepartureTime FROM Schedule WHERE ScheduleID = @ScheduleID;
+    IF @DepartureTime > GETDATE()
+        UPDATE Schedule SET AvailableSeats = AvailableSeats + 1 WHERE ScheduleID = @ScheduleID;
+    
+    INSERT INTO Cancellations (BookingID, Reason, RefundAmount, RefundStatus)
+    VALUES (@BookingID, @Reason, @TotalAmount, 'Approved');
+    
+    DECLARE @PointsToDeduct INT = @TotalAmount / 10;
+    UPDATE LoyaltyRewards 
+    SET TotalPoints = CASE WHEN TotalPoints >= @PointsToDeduct THEN TotalPoints - @PointsToDeduct ELSE 0 END,
+        LastUpdated = GETDATE()
+    WHERE ClientID = @ClientID;
+    
+    INSERT INTO RewardTransactions (ClientID, BookingID, PointsChanged, TransactionType)
+    VALUES (@ClientID, @BookingID, -@PointsToDeduct, 'AdminCancellation');
+    
+    SELECT 1 AS Success, 'Booking cancelled. Full refund of Rs. ' + CAST(@TotalAmount AS VARCHAR) + ' will be processed.' AS Message;
     COMMIT;
 END
 GO
 
--- Request refund
+-- User request refund (30% deduction)
 CREATE OR ALTER PROCEDURE sp_RequestRefund @BookingID INT, @ClientID INT, @Reason VARCHAR(500)
 AS
 BEGIN
     DECLARE @TotalAmount DECIMAL(8,2), @PaymentStatus VARCHAR(20), @BookingClientID INT;
     SELECT @TotalAmount = TotalAmount, @PaymentStatus = PaymentStatus, @BookingClientID = ClientID FROM Bookings WHERE BookingID = @BookingID;
+    
     IF @BookingClientID != @ClientID SELECT 0 AS Success, 'Unauthorized' AS Message;
     ELSE IF @PaymentStatus != 'Paid' SELECT 0 AS Success, 'Only paid bookings can be refunded' AS Message;
-    ELSE IF EXISTS (SELECT 1 FROM RefundRequests WHERE BookingID = @BookingID AND Status IN ('Pending', 'Approved')) SELECT 0 AS Success, 'Refund already requested or processed' AS Message;
+    ELSE IF EXISTS (SELECT 1 FROM RefundRequests WHERE BookingID = @BookingID AND Status IN ('Pending', 'Approved')) 
+        SELECT 0 AS Success, 'Refund already requested or processed' AS Message;
     ELSE
     BEGIN
         INSERT INTO RefundRequests (BookingID, ClientID, Reason, RequestedAmount, DeductionAmount, RefundAmount)
@@ -396,26 +559,43 @@ BEGIN
 END
 GO
 
--- Approve refund
+-- Approve refund (70% refund)
 CREATE OR ALTER PROCEDURE sp_ApproveRefund @RequestID INT, @AdminComment VARCHAR(500)
 AS
 BEGIN
     SET NOCOUNT ON;
     BEGIN TRANSACTION;
+    
     DECLARE @BookingID INT, @RefundAmount DECIMAL(8,2), @ClientID INT, @TotalAmount DECIMAL(8,2);
-    SELECT @BookingID = BookingID, @RefundAmount = RefundAmount, @ClientID = ClientID FROM RefundRequests WHERE RequestID = @RequestID AND Status = 'Pending';
+    
+    SELECT @BookingID = BookingID, @RefundAmount = RefundAmount, @ClientID = ClientID 
+    FROM RefundRequests WHERE RequestID = @RequestID AND Status = 'Pending';
+    
     IF @BookingID IS NULL
-    BEGIN SELECT 0 AS Success, 'Request not found or already processed' AS Message; ROLLBACK; RETURN; END
+    BEGIN
+        SELECT 0 AS Success, 'Request not found or already processed' AS Message;
+        ROLLBACK; RETURN;
+    END
+    
     UPDATE RefundRequests SET Status = 'Approved', AdminComment = @AdminComment, ProcessedDate = GETDATE() WHERE RequestID = @RequestID;
-    UPDATE Bookings SET PaymentStatus = 'Refunded', Status = 'Cancelled' WHERE BookingID = @BookingID;
+    UPDATE Bookings SET PaymentStatus = 'Refunded_User', Status = 'Cancelled' WHERE BookingID = @BookingID;
+    
     SET @TotalAmount = (SELECT TotalAmount FROM Bookings WHERE BookingID = @BookingID);
     DECLARE @PointsToDeduct INT = @TotalAmount / 10;
-    UPDATE LoyaltyRewards SET TotalPoints = CASE WHEN TotalPoints >= @PointsToDeduct THEN TotalPoints - @PointsToDeduct ELSE 0 END, LastUpdated = GETDATE() WHERE ClientID = @ClientID;
-    INSERT INTO RewardTransactions (ClientID, BookingID, PointsChanged, TransactionType) VALUES (@ClientID, @BookingID, -@PointsToDeduct, 'Refund');
+    UPDATE LoyaltyRewards 
+    SET TotalPoints = CASE WHEN TotalPoints >= @PointsToDeduct THEN TotalPoints - @PointsToDeduct ELSE 0 END,
+        LastUpdated = GETDATE()
+    WHERE ClientID = @ClientID;
+    
+    INSERT INTO RewardTransactions (ClientID, BookingID, PointsChanged, TransactionType)
+    VALUES (@ClientID, @BookingID, -@PointsToDeduct, 'Refund');
+    
     DECLARE @ScheduleID INT, @DepartureTime DATETIME;
     SELECT @ScheduleID = ScheduleID FROM Bookings WHERE BookingID = @BookingID;
     SELECT @DepartureTime = DepartureTime FROM Schedule WHERE ScheduleID = @ScheduleID;
-    IF @DepartureTime > GETDATE() UPDATE Schedule SET AvailableSeats = AvailableSeats + 1 WHERE ScheduleID = @ScheduleID;
+    IF @DepartureTime > GETDATE()
+        UPDATE Schedule SET AvailableSeats = AvailableSeats + 1 WHERE ScheduleID = @ScheduleID;
+    
     SELECT 1 AS Success, 'Refund approved. Amount ' + CAST(@RefundAmount AS VARCHAR) + ' will be refunded (30% fee deducted).' AS Message;
     COMMIT;
 END
@@ -431,37 +611,15 @@ BEGIN
 END
 GO
 
--- Auto-cancel expired bookings (cron job)
-CREATE OR ALTER PROCEDURE sp_CancelExpiredPendingBookings
-AS
-BEGIN
-    SET NOCOUNT ON;
-    DECLARE @BookingID INT, @ScheduleID INT;
-    DECLARE cur CURSOR FOR SELECT BookingID, ScheduleID FROM Bookings WHERE PaymentStatus = 'Pending' AND PaymentExpiry < GETDATE();
-    OPEN cur;
-    FETCH NEXT FROM cur INTO @BookingID, @ScheduleID;
-    WHILE @@FETCH_STATUS = 0
-    BEGIN
-        BEGIN TRANSACTION;
-        UPDATE Schedule SET AvailableSeats = AvailableSeats + 1 WHERE ScheduleID = @ScheduleID;
-        UPDATE Bookings SET Status = 'Cancelled', PaymentStatus = 'Failed' WHERE BookingID = @BookingID;
-        COMMIT;
-        FETCH NEXT FROM cur INTO @BookingID, @ScheduleID;
-    END
-    CLOSE cur;
-    DEALLOCATE cur;
-    SELECT @@ROWCOUNT AS ExpiredCount;
-END
-GO
-
 -- Get client bookings
 CREATE OR ALTER PROCEDURE sp_GetClientBookings @ClientID INT
 AS
 BEGIN
-    SELECT b.BookingID, b.BookingDate, b.SeatNumber, b.TotalAmount, b.Status AS BookingStatus,
-           b.PaymentStatus, b.PaymentExpiry,
+    SELECT b.BookingID, b.BookingDate, b.SeatNumber, b.TotalAmount, 
+           CASE WHEN s.DepartureTime < GETDATE() AND b.Status = 'Confirmed' THEN 'Completed' ELSE b.Status END AS BookingStatus,
+           b.PaymentStatus, b.PaymentExpiry, b.BookingType,
            s.DepartureTime, s.ArrivalTime, t.TrainName, t.TrainNumber,
-           dep.StationName AS DepartureStation, arr.StationName AS ArrivalStation, s.TicketPrice
+           dep.StationName AS DepartureStation, arr.StationName AS ArrivalStation
     FROM Bookings b
     INNER JOIN Schedule s ON b.ScheduleID = s.ScheduleID
     INNER JOIN Trains t ON s.TrainID = t.TrainID
@@ -491,132 +649,92 @@ GO
 -- Get all trains
 CREATE OR ALTER PROCEDURE sp_GetAllTrains
 AS
-BEGIN SELECT TrainID, TrainName, TrainNumber, TrainType, TotalSeats, AvailableSeats FROM Trains WHERE IsActive = 1; END
+BEGIN SELECT TrainID, TrainName, TrainNumber, TrainType, TotalSeats, AvailableSeats, SeatPrice, BerthPrice FROM Trains WHERE IsActive = 1; END
+GO
+
+-- Auto-complete past bookings
+CREATE OR ALTER PROCEDURE sp_AutoCompleteBookings
+AS
+BEGIN
+    UPDATE b SET b.Status = 'Completed'
+    FROM Bookings b INNER JOIN Schedule s ON b.ScheduleID = s.ScheduleID
+    WHERE s.DepartureTime < GETDATE() AND b.Status = 'Confirmed' AND b.PaymentStatus = 'Paid';
+    SELECT @@ROWCOUNT AS CompletedCount;
+END
+GO
+
+-- Cancel expired pending bookings
+CREATE OR ALTER PROCEDURE sp_CancelExpiredPendingBookings
+AS
+BEGIN
+    DECLARE @BookingID INT, @ScheduleID INT;
+    DECLARE cur CURSOR FOR SELECT BookingID, ScheduleID FROM Bookings WHERE PaymentStatus = 'Pending' AND PaymentExpiry < GETDATE();
+    OPEN cur;
+    FETCH NEXT FROM cur INTO @BookingID, @ScheduleID;
+    WHILE @@FETCH_STATUS = 0
+    BEGIN
+        BEGIN TRANSACTION;
+        UPDATE Schedule SET AvailableSeats = AvailableSeats + 1 WHERE ScheduleID = @ScheduleID;
+        UPDATE Bookings SET Status = 'Cancelled', PaymentStatus = 'Failed' WHERE BookingID = @BookingID;
+        COMMIT;
+        FETCH NEXT FROM cur INTO @BookingID, @ScheduleID;
+    END
+    CLOSE cur;
+    DEALLOCATE cur;
+    SELECT @@ROWCOUNT AS ExpiredCount;
+END
 GO
 
 -- =====================================================
--- STORED PROCEDURES - ADMIN
+-- MESSAGING STORED PROCEDURES
 -- =====================================================
 
--- Get all schedules for admin
-CREATE OR ALTER PROCEDURE sp_GetAllSchedulesAdmin
+CREATE OR ALTER PROCEDURE sp_SendUserMessage
+    @UserID INT, @UserName VARCHAR(100), @UserEmail VARCHAR(100),
+    @Subject VARCHAR(200), @Message TEXT
 AS
 BEGIN
-    SELECT s.ScheduleID, t.TrainID, t.TrainName, t.TrainNumber, t.TrainType,
-           dep.StationID AS DepartureStationID, dep.StationName AS DepartureStation,
-           arr.StationID AS ArrivalStationID, arr.StationName AS ArrivalStation,
-           s.DepartureTime, s.ArrivalTime, s.TicketPrice, s.AvailableSeats, s.Status
-    FROM Schedule s
-    INNER JOIN Trains t ON s.TrainID = t.TrainID
-    INNER JOIN Stations dep ON s.DepartureStation = dep.StationID
-    INNER JOIN Stations arr ON s.ArrivalStation = arr.StationID
-    ORDER BY s.DepartureTime DESC;
-END
-GO
-
--- Add schedule
-CREATE OR ALTER PROCEDURE sp_AddSchedule
-    @TrainID INT, @DepartureStationID INT, @ArrivalStationID INT,
-    @DepartureTime DATETIME, @ArrivalTime DATETIME,
-    @TicketPrice DECIMAL(8,2), @AvailableSeats INT, @Status VARCHAR(20)
-AS
-BEGIN
-    INSERT INTO Schedule (TrainID, DepartureStation, ArrivalStation, DepartureTime, ArrivalTime, TicketPrice, AvailableSeats, Status)
-    VALUES (@TrainID, @DepartureStationID, @ArrivalStationID, @DepartureTime, @ArrivalTime, @TicketPrice, @AvailableSeats, @Status);
-    SELECT 1 AS Success, 'Schedule added successfully' AS Message, SCOPE_IDENTITY() AS ScheduleID;
-END
-GO
-
--- Update schedule
-CREATE OR ALTER PROCEDURE sp_UpdateSchedule
-    @ScheduleID INT, @TrainID INT, @DepartureStationID INT, @ArrivalStationID INT,
-    @DepartureTime DATETIME, @ArrivalTime DATETIME,
-    @TicketPrice DECIMAL(8,2), @AvailableSeats INT, @Status VARCHAR(20)
-AS
-BEGIN
-    UPDATE Schedule SET TrainID = @TrainID, DepartureStation = @DepartureStationID,
-        ArrivalStation = @ArrivalStationID, DepartureTime = @DepartureTime,
-        ArrivalTime = @ArrivalTime, TicketPrice = @TicketPrice,
-        AvailableSeats = @AvailableSeats, Status = @Status
-    WHERE ScheduleID = @ScheduleID;
-    SELECT 1 AS Success, 'Schedule updated successfully' AS Message;
-END
-GO
-
--- Delete schedule
-CREATE OR ALTER PROCEDURE sp_DeleteSchedule @ScheduleID INT
-AS
-BEGIN
-    IF EXISTS (SELECT 1 FROM Bookings WHERE ScheduleID = @ScheduleID AND Status = 'Confirmed')
-        SELECT 0 AS Success, 'Cannot delete schedule with confirmed bookings' AS Message;
+    IF EXISTS (SELECT 1 FROM Conversations WHERE UserID = @UserID AND Status = 'Pending')
+        SELECT 0 AS Success, 'You already have a pending message. Please wait for admin reply.' AS Message;
     ELSE
     BEGIN
-        DELETE FROM Schedule WHERE ScheduleID = @ScheduleID;
-        SELECT 1 AS Success, 'Schedule deleted successfully' AS Message;
+        INSERT INTO Conversations (UserID, UserName, UserEmail, Subject, UserMessage, Status, CreatedAt, UpdatedAt)
+        VALUES (@UserID, @UserName, @UserEmail, @Subject, @Message, 'Pending', GETDATE(), GETDATE());
+        SELECT 1 AS Success, 'Message sent successfully.' AS Message, SCOPE_IDENTITY() AS ConversationID;
     END
 END
 GO
 
--- =====================================================
--- STORED PROCEDURES - UNIFIED MESSAGING
--- =====================================================
-
--- User sends new message
-CREATE OR ALTER PROCEDURE sp_SendUserMessage
-    @UserID INT,
-    @UserName VARCHAR(100),
-    @UserEmail VARCHAR(100),
-    @Subject VARCHAR(200),
-    @Message TEXT
-AS
-BEGIN
-    SET NOCOUNT ON;
-    IF EXISTS (SELECT 1 FROM Conversations WHERE UserID = @UserID AND Status = 'Pending')
-    BEGIN
-        SELECT 0 AS Success, 'You already have a pending message. Please wait for admin reply.' AS Message;
-        RETURN;
-    END
-    INSERT INTO Conversations (UserID, UserName, UserEmail, Subject, UserMessage, Status, CreatedAt, UpdatedAt)
-    VALUES (@UserID, @UserName, @UserEmail, @Subject, @Message, 'Pending', GETDATE(), GETDATE());
-    SELECT 1 AS Success, 'Message sent successfully.' AS Message, SCOPE_IDENTITY() AS ConversationID;
-END
-GO
-
--- Admin sends reply
 CREATE OR ALTER PROCEDURE sp_SendAdminReply @ConversationID INT, @AdminReply TEXT
 AS
 BEGIN
-    SET NOCOUNT ON;
     IF NOT EXISTS (SELECT 1 FROM Conversations WHERE ConversationID = @ConversationID AND Status = 'Pending')
-    BEGIN
         SELECT 0 AS Success, 'Conversation not found or already replied.' AS Message;
-        RETURN;
+    ELSE
+    BEGIN
+        UPDATE Conversations 
+        SET AdminReply = @AdminReply, AdminReplyDate = GETDATE(), Status = 'Replied', UpdatedAt = GETDATE()
+        WHERE ConversationID = @ConversationID;
+        SELECT 1 AS Success, 'Reply sent successfully.' AS Message;
     END
-    UPDATE Conversations 
-    SET AdminReply = @AdminReply, AdminReplyDate = GETDATE(), Status = 'Replied', UpdatedAt = GETDATE()
-    WHERE ConversationID = @ConversationID;
-    SELECT 1 AS Success, 'Reply sent successfully.' AS Message;
 END
 GO
 
--- User sends follow-up
 CREATE OR ALTER PROCEDURE sp_SendFollowUpMessage @ConversationID INT, @UserID INT, @NewMessage TEXT
 AS
 BEGIN
-    SET NOCOUNT ON;
     IF NOT EXISTS (SELECT 1 FROM Conversations WHERE ConversationID = @ConversationID AND UserID = @UserID AND Status = 'Replied')
-    BEGIN
         SELECT 0 AS Success, 'Cannot send follow-up. Admin has not replied yet.' AS Message;
-        RETURN;
+    ELSE
+    BEGIN
+        UPDATE Conversations 
+        SET UserMessage = @NewMessage, UserMessageDate = GETDATE(), AdminReply = NULL, AdminReplyDate = NULL, Status = 'Pending', UpdatedAt = GETDATE()
+        WHERE ConversationID = @ConversationID;
+        SELECT 1 AS Success, 'Follow-up sent. Admin will reply.' AS Message;
     END
-    UPDATE Conversations 
-    SET UserMessage = @NewMessage, UserMessageDate = GETDATE(), AdminReply = NULL, AdminReplyDate = NULL, Status = 'Pending', UpdatedAt = GETDATE()
-    WHERE ConversationID = @ConversationID;
-    SELECT 1 AS Success, 'Follow-up sent. Admin will reply.' AS Message;
 END
 GO
 
--- Get user conversation
 CREATE OR ALTER PROCEDURE sp_GetUserConversation @UserID INT
 AS
 BEGIN
@@ -625,7 +743,6 @@ BEGIN
 END
 GO
 
--- Get all conversations (admin)
 CREATE OR ALTER PROCEDURE sp_GetAdminAllConversations
 AS
 BEGIN
@@ -635,7 +752,6 @@ BEGIN
 END
 GO
 
--- Get conversation by ID
 CREATE OR ALTER PROCEDURE sp_GetConversationById @ConversationID INT
 AS
 BEGIN
@@ -673,7 +789,6 @@ GO
 -- SAMPLE DATA
 -- =====================================================
 
--- Stations
 INSERT INTO Stations (StationName, City, Province) VALUES
 ('Lahore Junction', 'Lahore', 'Punjab'),
 ('Karachi Cantt', 'Karachi', 'Sindh'),
@@ -684,34 +799,28 @@ INSERT INTO Stations (StationName, City, Province) VALUES
 ('Quetta', 'Quetta', 'Balochistan'),
 ('Islamabad', 'Islamabad', 'ICT');
 
--- Trains
-INSERT INTO Trains (TrainName, TrainNumber, TotalSeats, AvailableSeats, TrainType) VALUES
-('Green Line Express', 'GL-001', 300, 300, 'Express'),
-('Karakoram Express', 'KK-102', 250, 250, 'Express'),
-('Awam Express', 'AW-205', 400, 400, 'Local'),
-('Tezgam Express', 'TZ-310', 280, 280, 'Express'),
-('Bahauddin Zakariya', 'BZ-415', 220, 220, 'Local');
+INSERT INTO Trains (TrainName, TrainNumber, TrainType, TotalSeats, AvailableSeats, SeatPrice, BerthPrice) VALUES
+('Green Line Express', 'GL-001', 'Express', 0, 0, 500, 1000),
+('Karakoram Express', 'KK-102', 'Express', 0, 0, 500, 1000),
+('Awam Express', 'AW-205', 'Local', 0, 0, 400, 800),
+('Tezgam Express', 'TZ-310', 'Express', 0, 0, 600, 1200),
+('Bahauddin Zakariya', 'BZ-415', 'Local', 0, 0, 350, 700);
 
--- Schedule
-DECLARE @BaseDate DATE = DATEADD(DAY, 1, GETDATE());
-INSERT INTO Schedule (TrainID, DepartureStation, ArrivalStation, DepartureTime, ArrivalTime, TicketPrice, AvailableSeats) VALUES
-(1, 1, 2, DATEADD(HOUR, 8, CAST(@BaseDate AS DATETIME)), DATEADD(HOUR, 14, CAST(@BaseDate AS DATETIME)), 2500, 300),
-(2, 2, 3, DATEADD(HOUR, 9, CAST(DATEADD(DAY, 1, @BaseDate) AS DATETIME)), DATEADD(HOUR, 23.5, CAST(DATEADD(DAY, 1, @BaseDate) AS DATETIME)), 2200, 250),
-(3, 1, 4, DATEADD(HOUR, 7.5, CAST(DATEADD(DAY, 2, @BaseDate) AS DATETIME)), DATEADD(HOUR, 13, CAST(DATEADD(DAY, 2, @BaseDate) AS DATETIME)), 1200, 400),
-(4, 3, 6, DATEADD(HOUR, 6, CAST(DATEADD(DAY, 3, @BaseDate) AS DATETIME)), DATEADD(HOUR, 12, CAST(DATEADD(DAY, 3, @BaseDate) AS DATETIME)), 1800, 280),
-(5, 4, 5, DATEADD(HOUR, 10, CAST(DATEADD(DAY, 1, @BaseDate) AS DATETIME)), DATEADD(HOUR, 14.5, CAST(DATEADD(DAY, 1, @BaseDate) AS DATETIME)), 950, 220);
+INSERT INTO Schedule (TrainID, DepartureStation, ArrivalStation, DepartureTime, ArrivalTime, TicketPrice, SeatPrice, BerthPrice, SleeperCoaches, SeaterCoaches, AvailableSeats) VALUES
+(1, 1, 2, DATEADD(HOUR, 8, DATEADD(DAY, 1, GETDATE())), DATEADD(HOUR, 14, DATEADD(DAY, 1, GETDATE())), 0, 500, 1000, 2, 6, 320),
+(2, 2, 3, DATEADD(HOUR, 9, DATEADD(DAY, 2, GETDATE())), DATEADD(HOUR, 23.5, DATEADD(DAY, 2, GETDATE())), 0, 500, 1000, 2, 6, 320),
+(3, 1, 4, DATEADD(HOUR, 7.5, DATEADD(DAY, 3, GETDATE())), DATEADD(HOUR, 13, DATEADD(DAY, 3, GETDATE())), 0, 400, 800, 2, 6, 320),
+(4, 3, 6, DATEADD(HOUR, 6, DATEADD(DAY, 4, GETDATE())), DATEADD(HOUR, 12, DATEADD(DAY, 4, GETDATE())), 0, 600, 1200, 2, 6, 320),
+(5, 4, 5, DATEADD(HOUR, 10, DATEADD(DAY, 2, GETDATE())), DATEADD(HOUR, 14.5, DATEADD(DAY, 2, GETDATE())), 0, 350, 700, 2, 6, 320);
 
--- Clients (password: password123 for all)
 DECLARE @PasswordHash VARCHAR(255) = '$2b$10$6eI6q8XvZ5xY9zM7wP2QKOVs7cT9jFyKz3LmNpQrStUvWxYzAbCd';
 INSERT INTO Clients (FirstName, LastName, Email, Phone, PasswordHash, Role) VALUES
 ('Admin', 'User', 'admin@railway.com', '0300-0000000', @PasswordHash, 'Admin'),
 ('Test', 'User', 'test@test.com', '0300-1111111', @PasswordHash, 'User'),
 ('Super', 'Admin', 'l230787@lhr.nu.edu.pk', '0300-2222222', @PasswordHash, 'Admin');
 
--- Loyalty Rewards
 INSERT INTO LoyaltyRewards (ClientID, TotalPoints, TierLevel) SELECT ClientID, 0, 'Bronze' FROM Clients;
 
--- Catalogue
 INSERT INTO Catalogue (TrainID, Title, Description) VALUES
 (1, 'Green Line Luxury', 'Experience premium travel with air-conditioned coaches, reclining seats, and on-board dining.'),
 (2, 'Karakoram Comfort', 'Travel through scenic routes with panoramic windows and dedicated luggage storage.'),

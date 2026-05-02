@@ -51,29 +51,30 @@ export const publicAPI = {
     getTrains: () => API.get('/trains'),
     getCatalogue: () => API.get('/catalogue'),
     getRatings: () => API.get('/ratings'),
+    getBookedSeats: (scheduleId) => API.get(`/schedules/${scheduleId}/booked-seats`),
+    getTrainConfig: (trainId) => API.get(`/trains/${trainId}/config`),
     contactSupport: (data) => API.post('/contact', data)
+    
 };
 
 // ============================================
 // PROTECTED APIs (User)
 // ============================================
 export const protectedAPI = {
-    // Booking
-    bookTicket: (data) => API.post('/bookings', data),
+    bookTicket: (data) => API.post('/bookings', data), // data includes { scheduleId, seatNumber, bookingType, price }
     getMyBookings: () => API.get('/my-bookings'),
     cancelBooking: (id, reason) => API.post(`/bookings/${id}/cancel`, { reason }),
     cancelPendingBooking: (id) => API.post(`/bookings/${id}/cancel-pending`),
     requestRefund: (id, reason) => API.post(`/bookings/${id}/request-refund`, { reason }),
-    
-    // Ratings & Loyalty
     submitRating: (data) => API.post('/ratings', data),
     getLoyalty: () => API.get('/loyalty'),
-    
-    // User Messaging - New Functions
+    // In protectedAPI, update bookTicket:
+    bookTicket: (data) => API.post('/bookings', data), 
+// data now includes: { scheduleId, seatNumber, bookingType, price }
+    // Messaging
     sendUserMessage: (subject, message) => API.post('/messages/send', { subject, message }),
     sendFollowUp: (conversationId, message) => API.post(`/messages/${conversationId}/followup`, { message }),
-    getUserConversation: () => API.get('/messages/my-conversation'),
-    getConversationMessages: (conversationId) => API.get(`/messages/${conversationId}`)
+    getUserConversation: () => API.get('/messages/my-conversation')
 };
 
 // ============================================
@@ -85,10 +86,13 @@ export const adminAPI = {
     createAdmin: (data) => API.post('/admin/create', data),
     searchUsers: (query) => API.get(`/admin/users/search?q=${query}`),
     
-    // Booking Management
+    // Booking Management - THIS IS THE IMPORTANT FUNCTION
     getAllBookings: () => API.get('/admin/bookings'),
-    updateBookingStatus: (bookingId, status, seatNumber) => API.put(`/admin/bookings/${bookingId}`, { status, seatNumber }),
+    updateBookingStatus: (bookingId, status, seatNumber) => 
+        API.put(`/admin/bookings/${bookingId}`, { status, seatNumber }),
     searchBookings: (query) => API.get(`/admin/bookings/search?q=${query}`),
+    adminCancelBooking: (bookingId, reason) => 
+        API.post(`/admin/bookings/${bookingId}/admin-cancel`, { reason }),
     
     // Refund Management
     getRefundRequests: () => API.get('/admin/refund-requests'),
@@ -101,11 +105,10 @@ export const adminAPI = {
     updateSchedule: (id, data) => API.put(`/admin/schedules/${id}`, data),
     deleteSchedule: (id) => API.delete(`/admin/schedules/${id}`),
     
-    // Admin Messaging - New Functions
+    // Messaging
     getAllConversations: () => API.get('/admin/messages/all'),
     sendAdminReply: (conversationId, reply) => API.post(`/admin/messages/${conversationId}/reply`, { reply }),
-    getConversationDetail: (conversationId) => API.get(`/admin/messages/${conversationId}`),
-    getPendingMessages: () => API.get('/admin/messages/pending')
+    getConversationDetail: (conversationId) => API.get(`/admin/messages/${conversationId}`)
 };
 
 // ============================================

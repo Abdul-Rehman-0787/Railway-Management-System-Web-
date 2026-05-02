@@ -24,7 +24,6 @@ function Bookings() {
         }
     };
 
-    // Cancel a booking that is still pending payment (unpaid)
     const handleCancelPending = async (bookingId) => {
         if (window.confirm('Cancel this pending booking? The seat will be released.')) {
             try {
@@ -37,7 +36,6 @@ function Bookings() {
         }
     };
 
-    // Request refund for a paid booking (admin approval required)
     const handleRequestRefund = async (bookingId) => {
         const reason = refundReason[bookingId] || '';
         if (!reason.trim()) {
@@ -59,29 +57,29 @@ function Bookings() {
         }
     };
 
-    // Helper to show status badge based on payment and booking status
     const getStatusBadge = (bookingStatus, paymentStatus) => {
-        if (bookingStatus === 'Cancelled') {
-            if (paymentStatus === 'Refunded') 
-                return <span className="badge refunded">Refunded (30% fee)</span>;
-            return <span className="badge cancelled">Cancelled</span>;
+        if (paymentStatus === 'Refunded_Admin') {
+            return <span className="badge refunded-admin">✅ Fully Refunded (100%)</span>;
         }
-        if (paymentStatus === 'Pending') 
-            return <span className="badge pending">Payment Pending</span>;
-        if (paymentStatus === 'Paid' && bookingStatus === 'Confirmed') 
-            return <span className="badge confirmed">Confirmed</span>;
-        if (paymentStatus === 'RefundRequested') 
-            return <span className="badge refund-requested">Refund Requested</span>;
-        if (paymentStatus === 'Refunded') 
-            return <span className="badge refunded">Refunded (30% fee)</span>;
+        if (paymentStatus === 'Refunded_User') {
+            return <span className="badge refunded-user">💰 Refunded (70% after fee)</span>;
+        }
+        if (bookingStatus === 'Cancelled') {
+            return <span className="badge cancelled">❌ Cancelled</span>;
+        }
+        if (paymentStatus === 'Pending') {
+            return <span className="badge pending">⏳ Payment Pending</span>;
+        }
+        if (paymentStatus === 'Paid' && bookingStatus === 'Confirmed') {
+            return <span className="badge confirmed">✅ Confirmed</span>;
+        }
+        if (paymentStatus === 'RefundRequested') {
+            return <span className="badge refund-requested">📝 Refund Requested</span>;
+        }
         return <span className="badge">{bookingStatus}</span>;
     };
 
-    if (loading) return (
-    <div className="bookings-loading">
-        🎫 Loading your bookings...
-    </div>
-    );
+    if (loading) return <div className="bookings-loading">🎫 Loading your bookings...</div>;
 
     return (
         <div className="bookings-container">
@@ -99,48 +97,40 @@ function Bookings() {
                             <div className="booking-details">
                                 <p><strong>Route:</strong> {booking.DepartureStation} → {booking.ArrivalStation}</p>
                                 <p><strong>Departure:</strong> {new Date(booking.DepartureTime).toLocaleString()}</p>
-                                <p><strong>Seat:</strong> {booking.SeatNumber || 'Not assigned'}</p>
-                                <p><strong>Amount:</strong> Rs. {booking.TotalAmount}</p>
+                                <p><strong>Booking Type:</strong> 
+                                    <span className={`booking-type ${booking.BookingType}`}>
+                                        {booking.BookingType === 'berth' ? '🛌 Sleeper Berth' : '💺 Seat'}
+                                    </span>
+                                </p>
+                                <p><strong>Selected:</strong> {booking.SeatNumber || 'Not assigned'}</p>
+                                <p><strong>Amount:</strong> PKR {booking.TotalAmount}</p>
                                 <p><strong>Booked on:</strong> {new Date(booking.BookingDate).toLocaleString()}</p>
                                 {booking.PaymentExpiry && booking.PaymentStatus === 'Pending' && (
-                                    <p className="expiry">Pay before: {new Date(booking.PaymentExpiry).toLocaleString()}</p>
+                                    <p className="expiry">⏰ Pay before: {new Date(booking.PaymentExpiry).toLocaleString()}</p>
                                 )}
                                 {booking.PaymentStatus === 'RefundRequested' && (
                                     <p className="pending-msg">⏳ Waiting for admin approval</p>
                                 )}
-                                {booking.PaymentStatus === 'Refunded' && (
-                                    <p className="refunded-msg">✅ Refund completed (30% fee deducted)</p>
-                                )}
                             </div>
                             <div className="booking-actions">
                                 {booking.PaymentStatus === 'Pending' && (
-                                    <button 
-                                        className="cancel-pending-btn"
-                                        onClick={() => handleCancelPending(booking.BookingID)}
-                                    >
+                                    <button className="cancel-pending-btn" onClick={() => handleCancelPending(booking.BookingID)}>
                                         Cancel Booking
                                     </button>
                                 )}
                                 {booking.PaymentStatus === 'Paid' && booking.BookingStatus === 'Confirmed' && (
-                                    <button 
-                                        className="refund-btn"
-                                        onClick={() => setShowRefundModal(booking.BookingID)}
-                                    >
+                                    <button className="refund-btn" onClick={() => setShowRefundModal(booking.BookingID)}>
                                         Request Refund
                                     </button>
                                 )}
                                 {booking.PaymentStatus === 'RefundRequested' && (
-                                    <span className="info-text">Refund request under review</span>
+                                    <span className="info-text">📋 Refund request under review</span>
                                 )}
-                                {booking.PaymentStatus === 'Refunded' && (
-                                    <span className="info-text">Refund processed</span>
-                                )}
-                                {booking.PaymentStatus === 'Failed' && (
-                                    <span className="info-text">Payment failed / expired</span>
+                                {(booking.PaymentStatus === 'Refunded_Admin' || booking.PaymentStatus === 'Refunded_User') && (
+                                    <span className="info-text refunded-info">✅ Refund completed</span>
                                 )}
                             </div>
 
-                            {/* Refund Modal */}
                             {showRefundModal === booking.BookingID && (
                                 <div className="modal-overlay" onClick={() => setShowRefundModal(null)}>
                                     <div className="modal-content" onClick={e => e.stopPropagation()}>
@@ -153,10 +143,9 @@ function Bookings() {
                                             onChange={(e) => setRefundReason({...refundReason, [booking.BookingID]: e.target.value})}
                                         />
                                         <div className="refund-info">
-                                            <p><strong>Original amount:</strong> Rs. {booking.TotalAmount}</p>
-                                            <p><strong>Deduction (30% fee):</strong> Rs. {Math.round(booking.TotalAmount * 0.3)}</p>
-                                            <p><strong>Refund amount:</strong> Rs. {Math.round(booking.TotalAmount * 0.7)}</p>
-                                            <p className="note">* Refund will be processed after admin approval.</p>
+                                            <p><strong>Original amount:</strong> PKR {booking.TotalAmount}</p>
+                                            <p><strong>Deduction (30% fee):</strong> PKR {Math.round(booking.TotalAmount * 0.3)}</p>
+                                            <p><strong>Refund amount:</strong> PKR {Math.round(booking.TotalAmount * 0.7)}</p>
                                         </div>
                                         <div className="modal-actions">
                                             <button className="cancel-modal" onClick={() => setShowRefundModal(null)}>Close</button>

@@ -9,8 +9,8 @@ function AdminDashboard() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [searchQuery, setSearchQuery] = useState('');
-    const [searchType, setSearchType] = useState('id'); // 'id', 'name', 'email'
-    const [searchCategory, setSearchCategory] = useState('users'); // 'users', 'bookings'
+    const [searchType, setSearchType] = useState('id');
+    const [searchCategory, setSearchCategory] = useState('users');
     const [searchPerformed, setSearchPerformed] = useState(false);
     const [editingBooking, setEditingBooking] = useState(null);
     const [editForm, setEditForm] = useState({ status: '', seatNumber: '' });
@@ -26,8 +26,8 @@ function AdminDashboard() {
                 adminAPI.getAllUsers(),
                 adminAPI.getAllBookings()
             ]);
-            setUsers(usersRes.data.data);
-            setBookings(bookingsRes.data.data);
+            setUsers(usersRes.data.data || []);
+            setBookings(bookingsRes.data.data || []);
             setSearchPerformed(false);
         } catch (err) {
             console.error('Error fetching admin data:', err);
@@ -51,24 +51,21 @@ function AdminDashboard() {
                 let results = [];
                 
                 if (searchType === 'id') {
-                    // Search by ID - exact match
                     const allUsers = await adminAPI.getAllUsers();
                     const user = allUsers.data.data.find(u => 
-                        u.ClientID.toString() === searchQuery.trim()
+                        u.ClientID?.toString() === searchQuery.trim()
                     );
                     results = user ? [user] : [];
                 } else if (searchType === 'name') {
-                    // Search by Name - partial match (first or last name)
                     const allUsers = await adminAPI.getAllUsers();
                     results = allUsers.data.data.filter(u => 
-                        u.FirstName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                        u.LastName.toLowerCase().includes(searchQuery.toLowerCase())
+                        (u.FirstName?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
+                        (u.LastName?.toLowerCase() || '').includes(searchQuery.toLowerCase())
                     );
                 } else if (searchType === 'email') {
-                    // Search by Email - partial match
                     const allUsers = await adminAPI.getAllUsers();
                     results = allUsers.data.data.filter(u => 
-                        u.Email.toLowerCase().includes(searchQuery.toLowerCase())
+                        (u.Email?.toLowerCase() || '').includes(searchQuery.toLowerCase())
                     );
                 }
                 
@@ -80,24 +77,21 @@ function AdminDashboard() {
                 let results = [];
                 
                 if (searchType === 'id') {
-                    // Search by Booking ID - exact match
                     const allBookings = await adminAPI.getAllBookings();
                     const booking = allBookings.data.data.find(b => 
-                        b.BookingID.toString() === searchQuery.trim()
+                        b.BookingID?.toString() === searchQuery.trim()
                     );
                     results = booking ? [booking] : [];
                 } else if (searchType === 'name') {
-                    // Search by Passenger Name - partial match
                     const allBookings = await adminAPI.getAllBookings();
                     results = allBookings.data.data.filter(b => 
-                        b.FirstName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                        b.LastName.toLowerCase().includes(searchQuery.toLowerCase())
+                        (b.FirstName?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
+                        (b.LastName?.toLowerCase() || '').includes(searchQuery.toLowerCase())
                     );
                 } else if (searchType === 'email') {
-                    // Search by Email - partial match
                     const allBookings = await adminAPI.getAllBookings();
                     results = allBookings.data.data.filter(b => 
-                        b.Email.toLowerCase().includes(searchQuery.toLowerCase())
+                        (b.Email?.toLowerCase() || '').includes(searchQuery.toLowerCase())
                     );
                 }
                 
@@ -121,16 +115,46 @@ function AdminDashboard() {
 
     const handleUpdateBooking = async (bookingId) => {
         try {
-            await adminAPI.updateBookingStatus(bookingId, editForm.status, editForm.seatNumber);
-            toast.success('Booking updated successfully');
-            setEditingBooking(null);
-            fetchData();
+            // If status is being changed to 'Cancelled', use admin-cancel endpoint for FULL refund
+            if (editForm.status === 'Cancelled') {
+                const booking = bookings.find(b => b.BookingID === bookingId);
+                const reason = prompt(`Enter reason for cancellation:\nBooking #${bookingId}\nPassenger: ${booking.FirstName} ${booking.LastName}\nTrain: ${booking.TrainName}\nAmount: Rs. ${booking.TotalAmount}\n\n⚠️ This will give a 100% FULL REFUND.`);
+                if (!reason) return;
+                
+                const response = await adminAPI.adminCancelBooking(bookingId, reason);
+                if (response.data.success) {
+                    toast.success(response.data.message);
+                    setEditingBooking(null);
+                    fetchData();
+                } else {
+                    toast.error(response.data.message);
+                }
+            } else {
+                // For status changes to Confirmed or Completed, use regular update
+                const response = await adminAPI.updateBookingStatus(bookingId, editForm.status, editForm.seatNumber);
+                if (response.data.success) {
+                    toast.success(`Booking #${bookingId} updated successfully`);
+                    setEditingBooking(null);
+                    fetchData();
+                }
+            }
         } catch (err) {
-            toast.error('Update failed');
+            console.error('Update error:', err);
+            const errorMsg = err.response?.data?.message || err.message;
+            if (errorMsg.includes('duplicate') || errorMsg.includes('2601')) {
+                toast.error(`Seat "${editForm.seatNumber}" is already booked. Please choose a different seat.`);
+            } else {
+                toast.error('Update failed: ' + errorMsg);
+            }
         }
     };
 
     const openEditModal = (booking) => {
+        // Only allow editing if not already cancelled or refunded
+        if (booking.Status === 'Cancelled' || booking.PaymentStatus === 'Refunded_Admin' || booking.PaymentStatus === 'Refunded_User') {
+            toast.error('Cannot edit cancelled or refunded booking');
+            return;
+        }
         setEditingBooking(booking);
         setEditForm({
             status: booking.Status,
@@ -138,11 +162,50 @@ function AdminDashboard() {
         });
     };
 
-    if (loading && !searchPerformed) return (
-    <div className="loading-spinner">
-        🚂 Loading Admin dashboard...
-    </div>
-    );
+    const getStatusBadge = (status) => {
+        const statusClass = {
+            Confirmed: 'status-confirmed',
+            Pending: 'status-pending',
+            Cancelled: 'status-cancelled',
+            Completed: 'status-completed'
+        };
+        return <span className={`status-badge ${statusClass[status] || ''}`}>{status || 'N/A'}</span>;
+    };
+
+    // FIXED: Function name corrected from getPadge to getPaymentBadge
+    const getPaymentBadge = (paymentStatus) => {
+        const paymentClass = {
+            Paid: 'payment-paid',
+            Pending: 'payment-pending',
+            Refunded_Admin: 'payment-refunded-admin',
+            Refunded_User: 'payment-refunded-user',
+            RefundRequested: 'payment-refund-requested',
+            Failed: 'payment-failed'
+        };
+        
+        const paymentText = {
+            Paid: '✅ Paid',
+            Pending: '⏳ Pending',
+            Refunded_Admin: '💰 Refunded (100% - Admin)',
+            Refunded_User: '💰 Refunded (70% - User Request)',
+            RefundRequested: '📝 Refund Requested',
+            Failed: '❌ Failed'
+        };
+        
+        return <span className={`payment-badge ${paymentClass[paymentStatus] || ''}`}>
+            {paymentText[paymentStatus] || paymentStatus || 'N/A'}
+        </span>;
+    };
+
+    // Check if booking is locked (cannot be edited)
+    const isBookingLocked = (booking) => {
+        return booking.Status === 'Cancelled' || 
+               booking.PaymentStatus === 'Refunded_Admin' || 
+               booking.PaymentStatus === 'Refunded_User';
+    };
+
+    if (loading && !searchPerformed) return <div className="loading-spinner">Loading admin dashboard...</div>;
+    if (error) return <div className="error">{error}</div>;
 
     return (
         <div className="admin-dashboard">
@@ -152,7 +215,6 @@ function AdminDashboard() {
             <div className="search-section">
                 <h3>🔍 Search Database</h3>
                 
-                {/* Category Selection */}
                 <div className="category-buttons">
                     <button 
                         className={`category-btn ${searchCategory === 'users' ? 'active' : ''}`}
@@ -178,7 +240,6 @@ function AdminDashboard() {
                     </button>
                 </div>
 
-                {/* Search Type Dropdown */}
                 <div className="search-type-group">
                     <label>Search by:</label>
                     <select 
@@ -207,7 +268,6 @@ function AdminDashboard() {
                     </div>
                 </div>
 
-                {/* Search Input */}
                 <div className="search-input-group">
                     <input
                         type="text"
@@ -234,14 +294,12 @@ function AdminDashboard() {
                 <div className="results-summary">
                     {searchCategory === 'users' && (
                         <p>
-                            🔍 Searched {searchCategory} by <strong>{searchType}</strong>:
-                            "{searchQuery}" → Found <strong>{users.length}</strong> result(s)
+                            🔍 Searched {searchCategory} by <strong>{searchType}</strong>: "{searchQuery}" → Found <strong>{users.length}</strong> result(s)
                         </p>
                     )}
                     {searchCategory === 'bookings' && (
                         <p>
-                            🔍 Searched {searchCategory} by <strong>{searchType}</strong>:
-                            "{searchQuery}" → Found <strong>{bookings.length}</strong> result(s)
+                            🔍 Searched {searchCategory} by <strong>{searchType}</strong>: "{searchQuery}" → Found <strong>{bookings.length}</strong> result(s)
                         </p>
                     )}
                 </div>
@@ -272,11 +330,11 @@ function AdminDashboard() {
                                         <td>{user.Email} </td>
                                         <td>{user.Phone || '-'} </td>
                                         <td>
-                                            <span className={`role-badge ${user.Role.toLowerCase()}`}>
-                                                {user.Role}
+                                            <span className={`role-badge ${user.Role?.toLowerCase() || 'user'}`}>
+                                                {user.Role || 'User'}
                                             </span>
                                          </td>
-                                        <td>{new Date(user.CreatedAt).toLocaleDateString()} </td>
+                                        <td>{user.CreatedAt ? new Date(user.CreatedAt).toLocaleDateString() : '-'} </td>
                                         <td>{user.IsActive ? '✅ Active' : '❌ Inactive'} </td>
                                     </tr>
                                 ))}
@@ -303,7 +361,7 @@ function AdminDashboard() {
                                     <th>Amount</th>
                                     <th>Status</th>
                                     <th>Payment</th>
-                                    <th>Actions</th>
+                                    <th>Action</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -316,23 +374,24 @@ function AdminDashboard() {
                                          </td>
                                         <td>{booking.TrainName}<br/><small>{booking.TrainNumber}</small> </td>
                                         <td>{booking.DepartureStation} → {booking.ArrivalStation} </td>
-                                        <td>{new Date(booking.DepartureTime).toLocaleString()} </td>
+                                        <td>{booking.DepartureTime ? new Date(booking.DepartureTime).toLocaleString() : '-'} </td>
                                         <td>{booking.SeatNumber || '-'} </td>
                                         <td>Rs. {booking.TotalAmount} </td>
+                                        <td>{getStatusBadge(booking.Status)} </td>
+                                        <td>{getPaymentBadge(booking.PaymentStatus)} </td>
                                         <td>
-                                            <span className={`booking-status ${booking.Status.toLowerCase()}`}>
-                                                {booking.Status}
-                                            </span>
-                                         </td>
-                                        <td>
-                                            <span className={`payment-status ${booking.PaymentStatus?.toLowerCase() || 'pending'}`}>
-                                                {booking.PaymentStatus || 'Pending'}
-                                            </span>
-                                         </td>
-                                        <td>
-                                            <button className="edit-booking-btn" onClick={() => openEditModal(booking)}>
-                                                ✏️ Edit
-                                            </button>
+                                            {!isBookingLocked(booking) ? (
+                                                <button 
+                                                    className="edit-btn" 
+                                                    onClick={() => openEditModal(booking)}
+                                                >
+                                                    ✏️ Edit
+                                                </button>
+                                            ) : (
+                                                <span className="locked-badge" title="Cannot edit cancelled or refunded bookings">
+                                                    🔒 Locked
+                                                </span>
+                                            )}
                                          </td>
                                     </tr>
                                 ))}
@@ -358,14 +417,32 @@ function AdminDashboard() {
                 <div className="modal-overlay" onClick={() => setEditingBooking(null)}>
                     <div className="modal-content" onClick={e => e.stopPropagation()}>
                         <h3>✏️ Edit Booking #{editingBooking.BookingID}</h3>
+                        
+                        <div className="booking-info">
+                            <p><strong>Passenger:</strong> {editingBooking.FirstName} {editingBooking.LastName}</p>
+                            <p><strong>Train:</strong> {editingBooking.TrainName} ({editingBooking.TrainNumber})</p>
+                            <p><strong>Route:</strong> {editingBooking.DepartureStation} → {editingBooking.ArrivalStation}</p>
+                            <p><strong>Amount:</strong> Rs. {editingBooking.TotalAmount}</p>
+                            <p><strong>Current Payment:</strong> {editingBooking.PaymentStatus}</p>
+                        </div>
+                        
                         <div className="form-group">
                             <label>Status</label>
-                            <select value={editForm.status} onChange={(e) => setEditForm({...editForm, status: e.target.value})}>
+                            <select 
+                                value={editForm.status} 
+                                onChange={(e) => setEditForm({...editForm, status: e.target.value})}
+                            >
                                 <option value="Confirmed">✅ Confirmed</option>
-                                <option value="Cancelled">❌ Cancelled</option>
+                                <option value="Cancelled">❌ Cancelled (100% Full Refund)</option>
                                 <option value="Completed">🏁 Completed</option>
                             </select>
+                            {editForm.status === 'Cancelled' && (
+                                <div className="warning-note">
+                                    ⚠️ This will issue a 100% FULL REFUND to the passenger.
+                                </div>
+                            )}
                         </div>
+                        
                         <div className="form-group">
                             <label>Seat Number</label>
                             <input
@@ -374,7 +451,9 @@ function AdminDashboard() {
                                 onChange={(e) => setEditForm({...editForm, seatNumber: e.target.value})}
                                 placeholder="e.g., A12, B08"
                             />
+                            <small className="seat-hint">Leave as is to keep current seat</small>
                         </div>
+                        
                         <div className="modal-actions">
                             <button className="cancel-modal" onClick={() => setEditingBooking(null)}>Cancel</button>
                             <button className="submit-edit" onClick={() => handleUpdateBooking(editingBooking.BookingID)}>Save Changes</button>

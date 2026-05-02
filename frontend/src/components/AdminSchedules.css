@@ -1,40 +1,35 @@
-/* AdminSchedules.css - Modern & Readable */
-
-.admin-schedules {
-    padding: 2rem;
+.admin-schedules-container {
     max-width: 1400px;
     margin: 0 auto;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    padding: 20px;
 }
 
-/* Header Section */
-.header-section {
+.admin-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 2rem;
+    margin-bottom: 25px;
     flex-wrap: wrap;
-    gap: 1rem;
+    gap: 15px;
 }
 
-.header-section h1 {
-    font-size: 1.8rem;
-    color: #FF5722;
+.admin-header h1 {
     margin: 0;
+    color: #1e3c72;
+    font-size: 1.8rem;
 }
 
 .add-btn {
     background: linear-gradient(135deg, #10b981, #059669);
     color: white;
     border: none;
-    padding: 0.75rem 1.5rem;
-    border-radius: 8px;
-    font-size: 1rem;
-    font-weight: 600;
+    padding: 10px 24px;
+    border-radius: 30px;
     cursor: pointer;
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 8px;
+    font-weight: 600;
     transition: all 0.3s;
 }
 
@@ -44,46 +39,43 @@
 }
 
 /* Table Styles */
-.schedules-table-container {
+.schedules-table-wrapper {
     overflow-x: auto;
     background: white;
-    border-radius: 12px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    border-radius: 16px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
 .schedules-table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 0.9rem;
+    min-width: 1000px;
 }
 
-.schedules-table thead {
-    background: #FF5722;
-    color: white;
-}
-
-.schedules-table th {
-    padding: 1rem;
-    text-align: left;
-    font-weight: 600;
-    white-space: nowrap;
-}
-
+.schedules-table th,
 .schedules-table td {
-    padding: 1rem;
+    padding: 12px 15px;
+    text-align: left;
     border-bottom: 1px solid #e2e8f0;
     vertical-align: middle;
 }
 
-.schedules-table tbody tr:hover {
+.schedules-table th {
+    background: #f1f5f9;
+    font-weight: 600;
+    color: #1e293b;
+    white-space: nowrap;
+}
+
+.schedules-table tr:hover {
     background: #f8fafc;
 }
 
-/* Train Info Cell */
+/* Train Info */
 .train-info {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
+    gap: 10px;
 }
 
 .train-icon {
@@ -91,277 +83,347 @@
     font-size: 1.2rem;
 }
 
-.train-info strong {
-    font-size: 0.95rem;
-}
-
-.train-info small {
-    font-size: 0.75rem;
-    color: #64748b;
-}
-
-/* Route Info Cell */
-.route-info {
+/* Coach Badges */
+.coach-counts {
     display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    flex-wrap: wrap;
+    flex-direction: column;
+    gap: 4px;
 }
 
-.departure-icon {
-    color: #10b981;
+.coach-badge {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 0.78rem;
+    font-weight: 600;
 }
 
-.arrival-icon {
-    color: #ef4444;
+.coach-badge.sleeper {
+    background: #dbeafe;
+    color: #1e40af;
 }
 
-.arrow {
-    color: #94a3b8;
+.coach-badge.seater {
+    background: #dcfce7;
+    color: #166534;
+}
+
+/* Capacity Info */
+.capacity-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    font-size: 0.78rem;
+    color: #475569;
+}
+
+.total-capacity {
     font-weight: bold;
-}
-
-/* Time & Price Info */
-.time-info, .price-info {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    white-space: nowrap;
-}
-
-.time-info svg, .price-info svg {
-    color: #64748b;
-}
-
-.text-center {
-    text-align: center;
+    color: #1e3c72;
+    margin-top: 3px;
 }
 
 /* Status Badges */
 .status-badge {
     display: inline-block;
-    padding: 0.25rem 0.75rem;
+    padding: 4px 10px;
     border-radius: 20px;
     font-size: 0.75rem;
     font-weight: 600;
-    text-align: center;
 }
 
-.status-scheduled {
-    background: #dbeafe;
-    color: #1e40af;
-}
-
-.status-delayed {
-    background: #fed7aa;
-    color: #9a3412;
-}
-
-.status-cancelled {
-    background: #fee2e2;
-    color: #b91c1c;
-}
-
-.status-completed {
-    background: #dcfce7;
-    color: #166534;
-}
+.status-scheduled { background: #dbeafe; color: #1e40af; }
+.status-delayed { background: #fed7aa; color: #9a3412; }
+.status-cancelled { background: #fee2e2; color: #991b1b; }
+.status-completed { background: #dcfce7; color: #166534; }
 
 /* Action Buttons */
 .actions {
     display: flex;
-    gap: 0.5rem;
-    white-space: nowrap;
+    gap: 8px;
 }
 
 .edit-btn, .delete-btn {
-    background: none;
     border: none;
     cursor: pointer;
-    padding: 0.5rem;
+    padding: 6px 12px;
     border-radius: 6px;
+    font-size: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 5px;
     transition: all 0.2s;
-    font-size: 1rem;
+    white-space: nowrap;
 }
 
-.edit-btn {
-    color: #3b82f6;
-}
+.edit-btn { background: #3b82f6; color: white; }
+.edit-btn:hover { background: #2563eb; }
+.delete-btn { background: #ef4444; color: white; }
+.delete-btn:hover { background: #dc2626; }
 
-.edit-btn:hover {
-    background: #dbeafe;
-    transform: scale(1.05);
-}
-
-.delete-btn {
-    color: #ef4444;
-}
-
-.delete-btn:hover {
-    background: #fee2e2;
-    transform: scale(1.05);
-}
-
-/* Modal Form */
+/* Modal */
 .modal-overlay {
     position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
+    top: 0; left: 0; right: 0; bottom: 0;
     background: rgba(0, 0, 0, 0.5);
     display: flex;
     align-items: center;
     justify-content: center;
     z-index: 1000;
-    backdrop-filter: blur(4px);
 }
 
 .modal-content {
     background: white;
-    border-radius: 16px;
-    padding: 2rem;
+    border-radius: 20px;
     width: 90%;
-    max-width: 600px;
-    max-height: 90vh;
+    max-width: 680px;
+    max-height: 92vh;
     overflow-y: auto;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
 }
 
-.modal-content h2 {
-    margin-top: 0;
-    color: #FF5722;
-    border-bottom: 2px solid #e2e8f0;
-    padding-bottom: 0.75rem;
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 25px;
+    border-bottom: 1px solid #e2e8f0;
+    background: #f8fafc;
+    border-radius: 20px 20px 0 0;
+    position: sticky;
+    top: 0;
+    z-index: 10;
 }
 
-.form-group {
-    margin-bottom: 1rem;
+.modal-header h2 { margin: 0; color: #1e3c72; }
+
+.close-modal {
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    cursor: pointer;
+    color: #64748b;
 }
+
+.close-modal:hover { color: #ef4444; }
+
+.modal-body {
+    padding: 20px 25px;
+}
+
+/* Train Config Section */
+.train-config-section {
+    background: #f0f9ff;
+    border: 1px solid #bae6fd;
+    padding: 18px 20px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+}
+
+.train-config-section h3 {
+    margin: 0 0 6px 0;
+    color: #0369a1;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.pricing-note {
+    font-size: 0.8rem;
+    color: #0369a1;
+    margin: 0 0 14px 0;
+}
+
+.update-train-btn {
+    background: linear-gradient(135deg, #1e3c72, #2a5298);
+    color: white;
+    border: none;
+    padding: 9px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    font-size: 0.875rem;
+    transition: all 0.2s;
+    margin-top: 8px;
+}
+
+.update-train-btn:hover {
+    background: linear-gradient(135deg, #2a5298, #1e3c72);
+}
+
+.section-divider {
+    margin: 20px 0;
+    border: none;
+    border-top: 2px solid #e2e8f0;
+}
+
+/* Coach Config Section */
+.coach-config-section {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    padding: 18px 20px;
+    border-radius: 12px;
+    margin-bottom: 15px;
+}
+
+.coach-config-section h4 {
+    margin: 0 0 8px 0;
+    color: #1e3c72;
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.coach-rule-note {
+    font-size: 0.78rem;
+    color: #64748b;
+    background: #e0f2fe;
+    padding: 7px 12px;
+    border-radius: 8px;
+    margin: 0 0 14px 0;
+    line-height: 1.5;
+}
+
+/* Capacity Preview */
+.capacity-preview {
+    background: #1e3c72;
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-top: 12px;
+}
+
+.capacity-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 0;
+    color: #e2e8f0;
+    font-size: 0.875rem;
+}
+
+.capacity-row strong {
+    color: #FFC107;
+    font-size: 0.95rem;
+}
+
+.capacity-row.total {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid rgba(255,255,255,0.2);
+    color: white;
+    font-weight: 600;
+}
+
+.capacity-row.total strong {
+    color: #10b981;
+    font-size: 1.1rem;
+}
+
+/* Form */
+form { padding: 0; }
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.form-group { margin-bottom: 15px; }
 
 .form-group label {
     display: block;
-    margin-bottom: 0.5rem;
-    font-weight: 600;
+    margin-bottom: 6px;
+    font-weight: 500;
     color: #334155;
+    font-size: 0.9rem;
 }
 
 .form-group input,
 .form-group select {
     width: 100%;
-    padding: 0.75rem;
+    padding: 10px 12px;
     border: 1px solid #cbd5e1;
     border-radius: 8px;
     font-size: 0.9rem;
-    transition: border-color 0.2s;
+    box-sizing: border-box;
 }
 
 .form-group input:focus,
 .form-group select:focus {
     outline: none;
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    border-color: #FF5722;
+    box-shadow: 0 0 0 3px rgba(255, 87, 34, 0.1);
 }
 
-.form-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1rem;
+.form-group small {
+    display: block;
+    margin-top: 4px;
+    font-size: 0.72rem;
+    color: #64748b;
 }
 
-.form-actions {
+.modal-actions {
     display: flex;
     justify-content: flex-end;
-    gap: 1rem;
-    margin-top: 1.5rem;
-}
-
-.cancel-btn, .submit-btn {
-    padding: 0.75rem 1.5rem;
-    border: none;
-    border-radius: 8px;
-    font-size: 0.9rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
+    gap: 12px;
+    padding: 15px 0 5px;
+    border-top: 1px solid #e2e8f0;
+    margin-top: 10px;
 }
 
 .cancel-btn {
     background: #e2e8f0;
-    color: #334155;
-}
-
-.cancel-btn:hover {
-    background: #cbd5e1;
+    border: none;
+    padding: 9px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 500;
 }
 
 .submit-btn {
-    background: #3b82f6;
+    background: linear-gradient(135deg, #10b981, #059669);
     color: white;
+    border: none;
+    padding: 9px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
-.submit-btn:hover {
-    background: #2563eb;
-    transform: translateY(-1px);
+.loading-spinner {
+    text-align: center;
+    padding: 50px;
+    font-size: 1.2rem;
+    background: linear-gradient(135deg, #FFC107, #FF5722);
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+    animation: pulse 1.5s infinite;
 }
 
-/* No Data State */
 .no-data {
     text-align: center;
-    padding: 3rem;
-    color: #64748b;
-    font-size: 1rem;
-}
-
-/* Loading State */
-.loading {
-    text-align: center;
-    padding: 3rem;
-    font-size: 1.2rem;
+    padding: 40px;
     color: #64748b;
 }
 
-/* Responsive Design */
+@keyframes pulse {
+    0%, 100% { opacity: 0.5; }
+    50% { opacity: 1; }
+}
+
 @media (max-width: 768px) {
-    .admin-schedules {
-        padding: 1rem;
-    }
-    
-    .header-section {
-        flex-direction: column;
-        align-items: stretch;
-    }
-    
-    .add-btn {
-        justify-content: center;
-    }
-    
-    .schedules-table th,
-    .schedules-table td {
-        padding: 0.75rem;
-    }
-    
-    .form-row {
-        grid-template-columns: 1fr;
-        gap: 0;
-    }
-    
-    .modal-content {
-        padding: 1.5rem;
-    }
-}
-
-@media (max-width: 480px) {
-    .schedules-table {
-        font-size: 0.8rem;
-    }
-    
-    .train-info {
-        flex-direction: column;
-        text-align: center;
-    }
-    
-    .actions {
-        flex-direction: column;
-    }
+    .form-row { grid-template-columns: 1fr; }
+    .admin-header { flex-direction: column; align-items: stretch; }
+    .add-btn { justify-content: center; }
+    .actions { flex-direction: column; }
+    .edit-btn, .delete-btn { justify-content: center; }
 }

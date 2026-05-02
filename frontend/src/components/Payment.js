@@ -7,7 +7,7 @@ import './Payment.css';
 function Payment() {
     const location = useLocation();
     const navigate = useNavigate();
-    const { bookingId, scheduleDetails, expiryTime, amount } = location.state || {};
+    const { bookingId, scheduleDetails, selectedSeat, bookingType, amount, expiryTime } = location.state || {};
     const [loading, setLoading] = useState(false);
     const [timeLeft, setTimeLeft] = useState(null);
     const [cardDetails, setCardDetails] = useState({
@@ -16,7 +16,7 @@ function Payment() {
         cvv: '',
         name: ''
     });
-    
+
     useEffect(() => {
         if (!bookingId) {
             navigate('/schedules');
@@ -53,18 +53,14 @@ function Payment() {
         }
         setLoading(true);
         try {
-            const response = await api.post('/payment/confirm', {
-                bookingId,
-                paymentMethod: 'card',
-                cardDetails
-            });
+            const response = await api.post('/payment/confirm', { bookingId });
             if (response.data.success) {
                 toast.success('Payment successful! Booking confirmed.');
                 const user = getCurrentUser();
                 if (user?.role === 'Admin') {
                     navigate('/admin/dashboard');
                 } else {
-                    navigate('/dashboard');  // <-- user dashboard, not admin dashboard
+                    navigate('/dashboard');
                 }
             } else {
                 toast.error(response.data.message);
@@ -88,12 +84,6 @@ function Payment() {
         }
     };
 
-    if (loading) return (
-    <div className="payment-loading">
-        💳 Processing payment...
-    </div>
-    );
-    
     return (
         <div className="payment-container">
             <div className="payment-card">
@@ -104,10 +94,12 @@ function Payment() {
                     </div>
                 )}
                 <div className="booking-summary">
-                    <h3>Booking Details</h3>
-                    <p><strong>Train:</strong> {scheduleDetails?.TrainName}</p>
-                    <p><strong>From:</strong> {scheduleDetails?.DepartureStation} → <strong>To:</strong> {scheduleDetails?.ArrivalStation}</p>
+                    <h3>Booking Summary</h3>
+                    <p><strong>Train:</strong> {scheduleDetails?.TrainName} ({scheduleDetails?.TrainNumber})</p>
+                    <p><strong>Route:</strong> {scheduleDetails?.DepartureStation} → {scheduleDetails?.ArrivalStation}</p>
                     <p><strong>Departure:</strong> {new Date(scheduleDetails?.DepartureTime).toLocaleString()}</p>
+                    <p><strong>Booking Type:</strong> {bookingType === 'berth' ? '🛌 Sleeper Berth' : '💺 Seat'}</p>
+                    <p><strong>Selected {bookingType === 'berth' ? 'Berth' : 'Seat'}:</strong> {selectedSeat}</p>
                     <p><strong>Amount:</strong> PKR {amount}</p>
                 </div>
                 <form onSubmit={handleSubmit}>

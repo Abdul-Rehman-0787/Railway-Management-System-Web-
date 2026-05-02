@@ -1,4 +1,4 @@
-/* AdminMessages.css - Modern Support Chat Interface */
+/* AdminMessages.css - Complete Styles for Support Messages */
 
 .admin-messages-container {
     max-width: 1400px;
@@ -462,7 +462,6 @@
         font-size: 0.85rem;
     }
     
-    .reply-input-area textarea {
-        font-size: 0.85rem;
+    .reply-input-area textarea {        font-size: 0.85rem;
     }
 }

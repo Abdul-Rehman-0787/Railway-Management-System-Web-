@@ -6,7 +6,7 @@ function Footer() {
         <footer className="footer">
             <div className="footer-container">
                 <div className="footer-section">
-                    <h3>🚂 Railway Management System</h3>
+                    <h3>🚂 National Railway System</h3>
                     <p>Safe, Comfortable, and Reliable Travel Across Pakistan</p>
                     <p style={{ marginTop: '1rem', fontSize: '0.9rem' }}>
                         ⭐ Rated 4.8/5 by 10,000+ passengers
@@ -55,7 +55,7 @@ function Footer() {
             </div>
             
             <div className="footer-bottom">
-                <p>© 2024 Railway Management System. All rights reserved.</p>
+                <p>© 2024 National Railway System. All rights reserved.</p>
                 <p>🚆 Developed with ❤️ by Team RMS | Safe Journeys, Happy Memories 🚆</p>
                 <p style={{ fontSize: '0.7rem', marginTop: '0.5rem' }}>
                     Version 2.0 | Last Updated: May 2025

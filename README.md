@@ -1,4 +1,4 @@
-# 🚂 Railway Management System
+# 🚂 National Railway System
 
 > **A full-stack web application for end-to-end railway ticket booking, passenger management, loyalty rewards, refund processing, and admin–user communication.**
 
@@ -6,7 +6,7 @@
 
 ## 📖 Project Overview
 
-The **Railway Management System** is a comprehensive full-stack web application designed to streamline train travel management for both passengers and administrators. Passengers can search for train schedules, book tickets with deferred payment, manage reservations, earn loyalty rewards, leave reviews, request refunds (subject to admin approval), and communicate with support staff — all from a single interface.
+The **National Railway System** is a comprehensive full-stack web application designed to streamline train travel management for both passengers and administrators. Passengers can search for train schedules, book tickets with deferred payment, manage reservations, earn loyalty rewards, leave reviews, request refunds (subject to admin approval), and communicate with support staff — all from a single interface.
 
 Administrators are equipped with a dedicated dashboard to manage schedules (add, edit, delete), approve or reject refund requests, manage bookings, and respond to support conversations.
 

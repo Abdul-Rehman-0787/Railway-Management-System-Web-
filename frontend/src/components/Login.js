@@ -50,7 +50,7 @@ function Login() {
                 <div className="login-header">
                     <img src={logo} alt="Railway Logo" className="login-logo" />
                     <div className="train-icon">🚂</div>
-                    <h1>Railway Management System</h1>
+                    <h1>National Railway System</h1>
                     <p>Welcome back! Please login</p>
                 </div>
                 <form onSubmit={handleSubmit}>

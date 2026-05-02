@@ -1,4 +1,4 @@
-// Railway Management System Backend
+// National Railway System Backend
 const express = require('express');
 const cors = require('cors');
 const bcrypt = require('bcryptjs');
@@ -15,6 +15,49 @@ app.use(cors({
     credentials: true
 }));
 app.use(express.json());
+
+// ============================================
+// AI CHATBOT PROXY (Ollama)
+// ============================================
+
+// Proxy AI chatbot requests to Python FastAPI server
+app.use('/api/ai', async (req, res) => {
+    try {
+        const axios = require('axios');
+        
+        // Build the target URL
+        let targetUrl = `http://localhost:8001/api${req.url}`;
+        
+        // Forward the request
+        const response = await axios({
+            method: req.method,
+            url: targetUrl,
+            data: req.body,
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            timeout: 60000  // 60 second timeout for Ollama
+        });
+        
+        res.json(response.data);
+    } catch (error) {
+        console.error('AI Proxy Error:', error.message);
+        
+        if (error.code === 'ECONNREFUSED') {
+            res.status(503).json({
+                success: false,
+                message: 'AI service is not running. Please start the chatbot backend first.',
+                error: 'Ollama service unavailable'
+            });
+        } else {
+            res.status(500).json({
+                success: false,
+                message: 'AI service error. Please try again later.',
+                error: error.message
+            });
+        }
+    }
+});
 
 // ============================================
 // HARDCODED ADMIN CREDENTIALS
@@ -963,6 +1006,8 @@ app.get('/api/admin/support-tickets/:id/messages', authenticate, requireAdmin, a
     }
 });
 
+
+
 // ============================================
 // SCHEDULED JOB - Runs every 5 minutes
 // ============================================
@@ -993,7 +1038,7 @@ cron.schedule('*/5 * * * *', async () => {
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
     console.log(`\n========================================`);
-    console.log(`🚀 Railway Management System Backend`);
+    console.log(`🚀 National Railway System Backend`);
     console.log(`========================================`);
     console.log(`📡 Server: http://localhost:${PORT}`);
     console.log(`🔗 API: http://localhost:${PORT}/api`);

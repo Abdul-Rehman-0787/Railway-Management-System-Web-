@@ -1,0 +1,119 @@
+{
+  "knowledge_base": [
+    {
+      "question": "How do I book a train ticket?",
+      "answer": "Go to the Schedules page, find your desired train, and click Book Now. Then choose Seat or Berth, pick your spot from the seat map, and complete payment. You have 1 hour to pay (or 15 minutes if departure is within the hour).",
+      "category": "booking"
+    },
+    {
+      "question": "How long do I have to pay after booking?",
+      "answer": "You have 1 hour to complete payment after creating a booking. If the train departs within 1 hour, you only have 15 minutes. Unpaid bookings are automatically cancelled after expiry and the seat is released.",
+      "category": "payment"
+    },
+    {
+      "question": "What payment methods are accepted?",
+      "answer": "Payment is made by card through the secure payment page. After booking, you are redirected to complete payment within the time window.",
+      "category": "payment"
+    },
+    {
+      "question": "How do I cancel a booking?",
+      "answer": "Go to My Bookings. For unpaid (Pending) bookings, click Cancel Booking — no charge. For paid (Confirmed) bookings, click Request Refund. Admin reviews refund requests and processes them.",
+      "category": "cancellation"
+    },
+    {
+      "question": "What is the refund policy?",
+      "answer": "User-requested refunds: 30% cancellation fee is deducted, so you receive 70% of your payment back. Admin-cancelled bookings: 100% full refund with no deduction. Refunds are processed after admin approval.",
+      "category": "refund"
+    },
+    {
+      "question": "How long does a refund take?",
+      "answer": "After admin approves your refund request, processing typically takes a few business days depending on your bank. You can track your refund status in My Bookings.",
+      "category": "refund"
+    },
+    {
+      "question": "How do loyalty points work?",
+      "answer": "You earn 10 loyalty points for every 100 PKR spent on confirmed bookings. Points are lost if a booking is cancelled. Check your points in the Loyalty section of your dashboard.",
+      "category": "loyalty"
+    },
+    {
+      "question": "What are the loyalty tiers?",
+      "answer": "Bronze: 0–499 points. Silver: 500–1,999 points. Gold: 2,000–4,999 points. Platinum: 5,000+ points. Higher tiers unlock better perks and discounts.",
+      "category": "loyalty"
+    },
+    {
+      "question": "What is the difference between a Seat and a Berth?",
+      "answer": "A Seat is a regular chair — cheaper and good for daytime journeys. A Berth is a sleeping bed — more expensive but ideal for overnight travel. You choose your preference when booking.",
+      "category": "train"
+    },
+    {
+      "question": "How many coaches does a train have and what is the layout?",
+      "answer": "Each schedule has a configurable number of Sleeper and Seater coaches. Sleeper coach: 5 compartments, each with 6 berths + 2 seats = 30 berths + 10 seats per coach. Seater coach: 5 compartments, each with 6 seats + 2 berths = 30 seats + 10 berths per coach.",
+      "category": "train"
+    },
+    {
+      "question": "How do I choose my seat or berth?",
+      "answer": "After selecting a train and booking type (Seat or Berth), an interactive seat map shows available and booked spots. Click any green spot to select it. Blue means selected, grey means already booked.",
+      "category": "booking"
+    },
+    {
+      "question": "Can I change my seat after booking?",
+      "answer": "Seat changes after booking are handled by admin. Contact support through the Messages section in your dashboard, and an admin will update your seat assignment if possible.",
+      "category": "booking"
+    },
+    {
+      "question": "Which cities and stations are available?",
+      "answer": "We serve major cities across the country through the National Railway System: Lahore, Karachi, Rawalpindi, Islamabad, Multan, Faisalabad, Peshawar, and Quetta. More routes are being added regularly.",
+      "category": "stations"
+    },
+    {
+      "question": "How do I view my booking history?",
+      "answer": "Go to My Bookings in your dashboard. You can see all bookings with their status: Pending (awaiting payment), Confirmed (paid), Completed (journey done), or Cancelled.",
+      "category": "booking"
+    },
+    {
+      "question": "What happens if I miss my train?",
+      "answer": "Contact support immediately through the Messages section. Missed train situations are handled case-by-case. We recommend arriving at least 30 minutes before departure.",
+      "category": "support"
+    },
+    {
+      "question": "How do I contact support?",
+      "answer": "Use the Contact page for general enquiries, or go to Messages in your dashboard for account-specific issues. Admin replies within 24 hours. You can also send a follow-up message after receiving a reply.",
+      "category": "support"
+    },
+    {
+      "question": "How do I register or create an account?",
+      "answer": "Click Sign Up and fill in your name, email, phone, and password. You will be logged in automatically after registration. A loyalty account is created for you as well.",
+      "category": "account"
+    },
+    {
+      "question": "I forgot my password, what should I do?",
+      "answer": "Contact support through the Contact page with your registered email. Admin can assist with account recovery.",
+      "category": "account"
+    },
+    {
+      "question": "What does Pending booking status mean?",
+      "answer": "Pending means your booking is created but payment has not been completed yet. You must pay within the time window shown, otherwise the booking is automatically cancelled.",
+      "category": "booking"
+    },
+    {
+      "question": "What does Confirmed booking status mean?",
+      "answer": "Confirmed means your payment was successful and your seat or berth is reserved. You will find your booking details in My Bookings.",
+      "category": "booking"
+    },
+    {
+      "question": "How does admin cancellation work?",
+      "answer": "If admin cancels your booking for any reason (e.g., schedule change), you automatically receive a 100% full refund. No cancellation fee is applied. Loyalty points earned from that booking are also reversed.",
+      "category": "refund"
+    },
+    {
+      "question": "Can I book for someone else?",
+      "answer": "Bookings are tied to your account, but you can book a seat and arrange for someone else to travel. Contact support if you need assistance with this.",
+      "category": "booking"
+    },
+    {
+      "question": "What are the ticket prices?",
+      "answer": "Seat and berth prices are set by the admin per train. You can see the exact prices on the Schedules page before booking. Berths are generally more expensive than seats.",
+      "category": "booking"
+    }
+  ]
+}

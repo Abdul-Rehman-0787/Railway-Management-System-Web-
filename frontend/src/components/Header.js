@@ -81,6 +81,9 @@ function Header() {
                                 </button>
                                 {isUserDropdownOpen && (
                                     <div className="dropdown-content">
+                                        <Link to="/chatbot" className="nav-link">
+                                            🤖 AI Assistant
+                                        </Link>
                                         <Link to="/my-messages" onClick={closeAllDropdowns}>
                                             💬 My Messages
                                         </Link>

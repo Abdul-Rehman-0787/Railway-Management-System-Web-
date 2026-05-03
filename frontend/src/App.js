@@ -65,7 +65,7 @@ function App() {
                 <Route path="/contact" element={<Layout><Contact /></Layout>} />
                 
                 {/* Protected User Routes */}
-                <Route path="/chatbot" element={<Layout><Chatbot /></Layout>} />
+                <Route path="/chatbot" element={<Chatbot />} />
                 <Route path="/my-messages" element={ <Layout><ProtectedRoute><UserMessages /></ProtectedRoute></Layout>} />
                 <Route path="/dashboard" element={<Layout><ProtectedRoute><Dashboard /></ProtectedRoute></Layout>} />
                 <Route path="/bookings" element={<Layout><ProtectedRoute><Bookings /></ProtectedRoute></Layout>} />

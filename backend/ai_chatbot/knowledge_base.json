@@ -1,119 +1,284 @@
 {
   "knowledge_base": [
     {
-      "question": "How do I book a train ticket?",
-      "answer": "Go to the Schedules page, find your desired train, and click Book Now. Then choose Seat or Berth, pick your spot from the seat map, and complete payment. You have 1 hour to pay (or 15 minutes if departure is within the hour).",
+      "question": "What is the National Railway System?",
+      "answer": "The National Railway System (NRS) is Pakistan's unified train booking and travel management platform. It supports customer registration, train schedule management, interactive seat and berth booking with a visual seat map, payment processing, booking history, refund workflows with admin approval, a tiered loyalty rewards program, passenger support messaging, travel ratings, and train catalogues. It is designed for safe, efficient, and scalable national rail travel management.",
+      "category": "system"
+    },
+    {
+      "question": "How do I book a train ticket step by step?",
+      "answer": "1. Go to the Schedules page and find your desired train. 2. Click Book Now. 3. Choose Seat (cheaper, daytime) or Berth (overnight, more comfortable). 4. Pick your exact spot from the interactive seat map — green spots are available, grey spots are booked. 5. You are taken to the Payment page. 6. Complete payment within the allowed time window. 7. Your booking is confirmed and seat is reserved. You can view it in My Bookings.",
       "category": "booking"
     },
     {
       "question": "How long do I have to pay after booking?",
-      "answer": "You have 1 hour to complete payment after creating a booking. If the train departs within 1 hour, you only have 15 minutes. Unpaid bookings are automatically cancelled after expiry and the seat is released.",
+      "answer": "You have 60 minutes to complete payment after creating a booking. If the train departs within one hour, you only have 15 minutes. Unpaid bookings expire automatically and the seat is released. You can see the countdown timer on the payment page and in My Payments.",
+      "category": "payment"
+    },
+    {
+      "question": "Where can I see my unpaid or pending bookings?",
+      "answer": "Go to My Payments from your dashboard. All pending unpaid bookings are listed there with their countdown timer. You can either pay now or cancel the pending booking for free.",
       "category": "payment"
     },
     {
       "question": "What payment methods are accepted?",
-      "answer": "Payment is made by card through the secure payment page. After booking, you are redirected to complete payment within the time window.",
+      "answer": "Payment is processed securely on the Payment page after booking. You complete payment through the platform's payment gateway. Make sure to pay within the time window shown — 60 minutes normally or 15 minutes if departure is imminent.",
       "category": "payment"
     },
     {
+      "question": "What are the train coach types?",
+      "answer": "The system has two coach types. Sleeper coaches are for overnight journeys with beds (berths) and cost more — each has 5 compartments with 6 berths plus 2 seats per compartment, giving 30 berths and 10 seats per coach. Seater coaches are for daytime travel with regular seats and are cheaper — each has 5 compartments with 6 seats plus 2 berths per compartment, giving 30 seats and 10 berths per coach. Each schedule can have a different number of each coach type set by the admin.",
+      "category": "train"
+    },
+    {
+      "question": "What is the difference between a seat and a berth?",
+      "answer": "A seat is a regular chair, cheaper and suitable for daytime journeys. A berth is a sleeping bed, more expensive and ideal for overnight travel. In a sleeper coach, berths are labeled LB (Lower Berth), MB (Middle Berth), UB (Upper Berth), SLB (Side Lower Berth), SMB (Side Middle Berth), SUB (Side Upper Berth). Side berths are slightly cheaper and more exposed. In a seater coach, seats are labeled AL, BL, CL on the left and AR, BR, CR on the right side.",
+      "category": "train"
+    },
+    {
+      "question": "How does the seat map work?",
+      "answer": "During booking you see an interactive seat map showing every coach on the train. Green spots are available, grey spots are already booked by other passengers, and your selected spot turns highlighted. Click any green spot to select it. If you chose Seat booking you can only click seat spots. If you chose Berth booking you can only click berth spots. The map is organised coach by coach so you can see exactly where you will be sitting.",
+      "category": "booking"
+    },
+    {
+      "question": "What berth labels are available in sleeper coaches?",
+      "answer": "In sleeper coaches, each compartment has 6 berths: LB (Lower Berth) is easiest to access and most popular, MB (Middle Berth) is middle level, UB (Upper Berth) is topmost and cheapest in real railways, SLB (Side Lower Berth), SMB (Side Middle Berth), and SUB (Side Upper Berth) are the side berths which face the aisle. There are also 2 seats S1 and S2 per compartment.",
+      "category": "train"
+    },
+    {
+      "question": "What seat labels are available in seater coaches?",
+      "answer": "In seater coaches, each compartment has 6 seats arranged in two rows facing each other. Left side seats are AL, BL, CL and right side seats are AR, BR, CR. Each compartment also has 2 side berths UB (Upper Berth) and LB (Lower Berth) for passengers who booked berths on a seater train.",
+      "category": "train"
+    },
+    {
+      "question": "What cities and stations does the railway serve?",
+      "answer": "The National Railway System currently serves 8 major cities: Lahore Junction, Karachi Cantt, Rawalpindi, Islamabad, Multan Cantt, Faisalabad, Peshawar Cantt, and Quetta. New routes and stations can be added by administrators.",
+      "category": "stations"
+    },
+    {
+      "question": "What trains are available on the platform?",
+      "answer": "Current trains are: Green Line Express (GL-001) — Express between Lahore and Karachi. Karakoram Express (KK-102) — Express between Karachi and Rawalpindi. Awam Express (AW-205) — Local between Lahore and Multan. Tezgam Express (TZ-310) — Express between Rawalpindi and Peshawar. Bahauddin Zakariya (BZ-415) — Local between Multan and Faisalabad. Admins can add more trains.",
+      "category": "trains"
+    },
+    {
+      "question": "What is the difference between Express and Local trains?",
+      "answer": "Express trains are faster with fewer intermediate stops and are generally more expensive. Local trains stop at more stations along the route and are more affordable. On the Schedules page, the train type is shown on each card.",
+      "category": "trains"
+    },
+    {
+      "question": "How do schedules work and where can I see them?",
+      "answer": "Train schedules are managed by administrators. Each schedule shows the train, departure station, arrival station, departure time, arrival time, seat price, berth price, number of coaches, and available spots. The Schedules page only shows upcoming trains with Scheduled status. Past trains and cancelled trains are hidden from passengers.",
+      "category": "operations"
+    },
+    {
+      "question": "What are the booking statuses and what do they mean?",
+      "answer": "Pending means your booking is created but payment is not yet completed — you must pay within the timer. Confirmed means payment was successful and your seat or berth is fully reserved. Completed means the journey date has passed and your trip is done. Cancelled means the booking was voided — either by you, by expiry, or by the admin.",
+      "category": "booking"
+    },
+    {
       "question": "How do I cancel a booking?",
-      "answer": "Go to My Bookings. For unpaid (Pending) bookings, click Cancel Booking — no charge. For paid (Confirmed) bookings, click Request Refund. Admin reviews refund requests and processes them.",
+      "answer": "Go to My Bookings in your dashboard. For a Pending booking that has not been paid, click Cancel Booking — it is free with no charge and the seat is released immediately. For a Confirmed booking that has been paid, click Request Refund — this starts the refund process with a 30% cancellation fee, and admin will review and approve it.",
       "category": "cancellation"
     },
     {
       "question": "What is the refund policy?",
-      "answer": "User-requested refunds: 30% cancellation fee is deducted, so you receive 70% of your payment back. Admin-cancelled bookings: 100% full refund with no deduction. Refunds are processed after admin approval.",
+      "answer": "For user-requested refunds on confirmed paid bookings, a 30% cancellation fee applies and you receive 70% of your payment back. For admin-cancelled bookings, you receive a 100% full refund with no deduction. Refunds are processed after admin approval and typically take a few business days to reach your account.",
       "category": "refund"
     },
     {
       "question": "How long does a refund take?",
-      "answer": "After admin approves your refund request, processing typically takes a few business days depending on your bank. You can track your refund status in My Bookings.",
+      "answer": "After admin approves your refund request, processing typically takes a few business days depending on your bank. You can track the refund status in My Bookings — the status will change to Refunded once processed.",
       "category": "refund"
     },
     {
+      "question": "What happens to my seat when I cancel?",
+      "answer": "For pending booking cancellations, the seat is released immediately and becomes available for other passengers. For confirmed booking refund requests, the seat is released after admin approves the refund — if the train has not yet departed. If the train has already departed, the seat is not released.",
+      "category": "cancellation"
+    },
+    {
       "question": "How do loyalty points work?",
-      "answer": "You earn 10 loyalty points for every 100 PKR spent on confirmed bookings. Points are lost if a booking is cancelled. Check your points in the Loyalty section of your dashboard.",
+      "answer": "You automatically earn 10 loyalty points for every 100 PKR spent on confirmed and paid bookings. For example, a PKR 500 ticket earns 50 points. Points are credited immediately after payment confirmation. If a booking is later cancelled, the points from that booking are reversed and deducted from your balance.",
       "category": "loyalty"
     },
     {
       "question": "What are the loyalty tiers?",
-      "answer": "Bronze: 0–499 points. Silver: 500–1,999 points. Gold: 2,000–4,999 points. Platinum: 5,000+ points. Higher tiers unlock better perks and discounts.",
+      "answer": "There are 4 tiers based on your total accumulated points: Bronze (0–499 points) is the starting tier for all new users. Silver (500–1,999 points) unlocks better discounts and perks. Gold (2,000–4,999 points) gives priority support and greater rewards. Platinum (5,000+ points) is the top tier with the best benefits including maximum discounts and premium support. Tiers upgrade automatically when your points cross the threshold.",
       "category": "loyalty"
     },
     {
-      "question": "What is the difference between a Seat and a Berth?",
-      "answer": "A Seat is a regular chair — cheaper and good for daytime journeys. A Berth is a sleeping bed — more expensive but ideal for overnight travel. You choose your preference when booking.",
-      "category": "train"
+      "question": "How do I earn more loyalty points faster?",
+      "answer": "Book more confirmed and paid tickets — every 100 PKR spent earns 10 points. There are no bonus point events currently, but higher value routes such as Lahore to Karachi earn more points due to higher ticket prices. Make sure your bookings reach Confirmed status — pending expired bookings earn no points.",
+      "category": "loyalty"
     },
     {
-      "question": "How many coaches does a train have and what is the layout?",
-      "answer": "Each schedule has a configurable number of Sleeper and Seater coaches. Sleeper coach: 5 compartments, each with 6 berths + 2 seats = 30 berths + 10 seats per coach. Seater coach: 5 compartments, each with 6 seats + 2 berths = 30 seats + 10 berths per coach.",
-      "category": "train"
+      "question": "How do I check my loyalty points and tier?",
+      "answer": "Log in and go to your Dashboard, then click the Loyalty section. You will see your total accumulated points, your current tier (Bronze, Silver, Gold, or Platinum), and the threshold for the next tier.",
+      "category": "loyalty"
     },
     {
-      "question": "How do I choose my seat or berth?",
-      "answer": "After selecting a train and booking type (Seat or Berth), an interactive seat map shows available and booked spots. Click any green spot to select it. Blue means selected, grey means already booked.",
-      "category": "booking"
-    },
-    {
-      "question": "Can I change my seat after booking?",
-      "answer": "Seat changes after booking are handled by admin. Contact support through the Messages section in your dashboard, and an admin will update your seat assignment if possible.",
-      "category": "booking"
-    },
-    {
-      "question": "Which cities and stations are available?",
-      "answer": "We serve major cities across the country through the National Railway System: Lahore, Karachi, Rawalpindi, Islamabad, Multan, Faisalabad, Peshawar, and Quetta. More routes are being added regularly.",
-      "category": "stations"
-    },
-    {
-      "question": "How do I view my booking history?",
-      "answer": "Go to My Bookings in your dashboard. You can see all bookings with their status: Pending (awaiting payment), Confirmed (paid), Completed (journey done), or Cancelled.",
-      "category": "booking"
-    },
-    {
-      "question": "What happens if I miss my train?",
-      "answer": "Contact support immediately through the Messages section. Missed train situations are handled case-by-case. We recommend arriving at least 30 minutes before departure.",
-      "category": "support"
-    },
-    {
-      "question": "How do I contact support?",
-      "answer": "Use the Contact page for general enquiries, or go to Messages in your dashboard for account-specific issues. Admin replies within 24 hours. You can also send a follow-up message after receiving a reply.",
-      "category": "support"
+      "question": "Do my loyalty points expire?",
+      "answer": "Points from active confirmed bookings do not expire. However, if a booking is cancelled or refunded, the points earned from that specific booking are reversed. Points from completed journeys remain permanently in your account.",
+      "category": "loyalty"
     },
     {
       "question": "How do I register or create an account?",
-      "answer": "Click Sign Up and fill in your name, email, phone, and password. You will be logged in automatically after registration. A loyalty account is created for you as well.",
+      "answer": "Click Sign Up on the login page. Fill in your first name, last name, email address, phone number, and password. After registration you are logged in automatically and a Bronze loyalty account is created for you. You can start booking immediately.",
       "category": "account"
     },
     {
-      "question": "I forgot my password, what should I do?",
-      "answer": "Contact support through the Contact page with your registered email. Admin can assist with account recovery.",
+      "question": "How do I log in?",
+      "answer": "Go to the login page at /login. Enter your registered email and password. If you are an admin, you will be redirected to the admin dashboard. Regular users are taken to their personal dashboard.",
       "category": "account"
     },
     {
-      "question": "What does Pending booking status mean?",
-      "answer": "Pending means your booking is created but payment has not been completed yet. You must pay within the time window shown, otherwise the booking is automatically cancelled.",
+      "question": "What is in my dashboard?",
+      "answer": "Your dashboard shows: total number of bookings, total amount spent, your current loyalty points balance and tier level, and a summary of your recent bookings. From the dashboard menu you can access My Bookings, My Payments, My Messages, and Loyalty sections.",
+      "category": "account"
+    },
+    {
+      "question": "How do I view my booking history?",
+      "answer": "Go to My Bookings in your dashboard. All your bookings are listed with their current status, train and route details, seat number, amount paid, and available actions. You can request refunds or cancel pending bookings from here.",
       "category": "booking"
     },
     {
-      "question": "What does Confirmed booking status mean?",
-      "answer": "Confirmed means your payment was successful and your seat or berth is reserved. You will find your booking details in My Bookings.",
+      "question": "How do I contact support?",
+      "answer": "There are two ways to contact support. For general enquiries, use the Contact page at /contact — this sends a message to the support team. For account-specific issues, go to My Messages in your dashboard — you can send a message and an admin will reply directly. Admins typically reply within 24 hours.",
+      "category": "support"
+    },
+    {
+      "question": "How does the messaging system work?",
+      "answer": "Each user has one active conversation thread with support. Send your message from My Messages and it shows as Pending. When an admin replies, the status changes to Replied and you can read the response. You can then send a follow-up message. You cannot send another message while yours is still Pending — wait for admin to reply first.",
+      "category": "support"
+    },
+    {
+      "question": "What happens if I miss my train?",
+      "answer": "Contact support immediately through My Messages in your dashboard. Missed train situations are reviewed on a case by case basis by the admin team. We strongly recommend arriving at least 30 minutes before the scheduled departure time.",
+      "category": "support"
+    },
+    {
+      "question": "Can I change my seat after booking?",
+      "answer": "Seat changes after a confirmed booking are handled by admin. Contact support through My Messages in your dashboard and describe the issue. An admin will update your seat assignment if a suitable seat is available.",
       "category": "booking"
     },
     {
-      "question": "How does admin cancellation work?",
-      "answer": "If admin cancels your booking for any reason (e.g., schedule change), you automatically receive a 100% full refund. No cancellation fee is applied. Loyalty points earned from that booking are also reversed.",
-      "category": "refund"
+      "question": "How do admins manage the system?",
+      "answer": "Administrators access the admin panel at /admin/*. They can add, edit, and delete train schedules including setting per-journey coach counts and prices. They view and manage all bookings, admin-cancel bookings with full refund, approve or reject passenger refund requests, reply to support conversations, and manage user accounts.",
+      "category": "admin"
+    },
+    {
+      "question": "How does admin schedule management work?",
+      "answer": "Admins go to Manage Schedules and click Add Schedule. They pick the train, departure station, arrival station, departure and arrival times, seat price in PKR, berth price in PKR, number of sleeper coaches, and number of seater coaches. Total capacity is calculated automatically. Schedules can also be edited or deleted — deleting is blocked if confirmed bookings exist.",
+      "category": "admin"
+    },
+    {
+      "question": "What happens when a booking expires automatically?",
+      "answer": "Every 5 minutes a background job runs and cancels all bookings whose payment timer has expired. The seat is released back to available immediately. If you had a Pending booking that was auto-cancelled, you need to book again from the Schedules page.",
+      "category": "booking"
+    },
+    {
+      "question": "How are completed journeys handled?",
+      "answer": "Every 5 minutes the background job also checks for confirmed paid bookings whose train departure time has passed. These are automatically marked as Completed. Completed bookings appear in your My Bookings history and you can submit a rating for that journey.",
+      "category": "booking"
+    },
+    {
+      "question": "How do I submit a rating or review?",
+      "answer": "Go to the Ratings page at /ratings. You can submit a 1 to 5 star rating and a written review for a train journey. All ratings are visible publicly on the Ratings page. This helps other passengers and provides feedback to the railway system.",
+      "category": "ratings"
+    },
+    {
+      "question": "What is the train catalogue?",
+      "answer": "The Catalogue page at /catalogue shows promotional information for each train including images, descriptions, and key features. For example, Green Line Express is described as a premium train with air-conditioned coaches, reclining seats, and on-board dining.",
+      "category": "catalogue"
+    },
+    {
+      "question": "Is there a mobile app?",
+      "answer": "Currently the National Railway System is available as a web application accessible from any browser on mobile, tablet, or desktop. A dedicated mobile application is planned as a future enhancement.",
+      "category": "system"
+    },
+    {
+      "question": "How much does a ticket cost?",
+      "answer": "Ticket prices are set per schedule by the admin and vary by route and train type. Typical fares: Seat tickets range from PKR 350 to PKR 600. Berth tickets range from PKR 700 to PKR 1,200. Express trains are generally more expensive than Local trains. Always check the exact price on the Schedules page for your chosen journey.",
+      "category": "pricing"
     },
     {
       "question": "Can I book for someone else?",
-      "answer": "Bookings are tied to your account, but you can book a seat and arrange for someone else to travel. Contact support if you need assistance with this.",
+      "answer": "Currently bookings are linked to your account and the logged-in user is the ticket holder. If you need to book for another person, please contact support through My Messages for assistance.",
       "category": "booking"
     },
     {
-      "question": "What are the ticket prices?",
-      "answer": "Seat and berth prices are set by the admin per train. You can see the exact prices on the Schedules page before booking. Berths are generally more expensive than seats.",
+      "question": "What if a train is sold out?",
+      "answer": "If a train has no available seats, the Book Now button on the Schedules page will show Sold Out and cannot be clicked. Check back later as cancelled bookings release seats. You can also look for an alternative schedule on a different date or train.",
       "category": "booking"
+    },
+    {
+      "question": "What is the Green Line Express?",
+      "answer": "Green Line Express (train number GL-001) is a premium Express service connecting Lahore and Karachi. It features air-conditioned coaches, reclining seats, and on-board dining. It is one of the most popular trains on the platform for long-distance travel.",
+      "category": "trains"
+    },
+    {
+      "question": "What is the Karakoram Express?",
+      "answer": "Karakoram Express (train number KK-102) is an Express service between Karachi and Rawalpindi. It offers comfortable coaches with scenic views and dedicated luggage storage. It is a well-known long-distance train in Pakistan.",
+      "category": "trains"
+    },
+    {
+      "question": "What is the Awam Express?",
+      "answer": "Awam Express (train number AW-205) is a Local service between Lahore and Multan. It is one of the most affordable trains on the platform, offering clean and safe coaches for everyday commuters. Local trains stop at more intermediate stations.",
+      "category": "trains"
+    },
+    {
+      "question": "What is the Tezgam Express?",
+      "answer": "Tezgam Express (train number TZ-310) is an Express service between Rawalpindi and Peshawar. It offers a business class-style experience with comfortable seating and premium amenities. It is a popular choice for passengers travelling to KPK.",
+      "category": "trains"
+    },
+    {
+      "question": "What is the Bahauddin Zakariya train?",
+      "answer": "Bahauddin Zakariya (train number BZ-415) is a Local service between Multan and Faisalabad. It serves as a regional connector for the Punjab province, offering affordable fares for shorter journeys.",
+      "category": "trains"
+    },
+    {
+      "question": "How is available seats calculated?",
+      "answer": "When a schedule is created, available seats are calculated automatically from the coach configuration: Sleeper coaches contribute 30 berths plus 10 seats each. Seater coaches contribute 30 seats plus 10 berths each. The total is stored and decremented by 1 each time a booking is made. It is incremented back when a booking is cancelled or expires.",
+      "category": "operations"
+    },
+    {
+      "question": "What does the admin refund approval process look like?",
+      "answer": "When a passenger clicks Request Refund, the booking status changes to RefundRequested. An admin sees this in the Refund Requests section of the admin panel. The admin can approve with a 30% deduction (passenger gets 70% back) or reject the request with a comment. On approval, loyalty points from that booking are reversed and the seat is released if the train has not departed.",
+      "category": "refund"
+    },
+    {
+      "question": "How many loyalty points do I need to reach Silver tier?",
+      "answer": "You need 500 loyalty points to reach Silver tier. Since you earn 10 points per 100 PKR spent, you would need to spend PKR 5,000 in total on confirmed bookings to reach Silver. For example, 10 trips at PKR 500 each would earn you 500 points.",
+      "category": "loyalty"
+    },
+    {
+      "question": "How many loyalty points do I need to reach Gold tier?",
+      "answer": "You need 2,000 loyalty points to reach Gold tier. At 10 points per 100 PKR spent, this requires a total spend of PKR 20,000 on confirmed bookings. For example, 40 trips at PKR 500 each.",
+      "category": "loyalty"
+    },
+    {
+      "question": "How many loyalty points do I need to reach Platinum tier?",
+      "answer": "You need 5,000 loyalty points to reach Platinum tier. At 10 points per 100 PKR spent, this requires a total spend of PKR 50,000 on confirmed bookings. Platinum is the highest and most exclusive tier with maximum benefits.",
+      "category": "loyalty"
+    },
+    {
+      "question": "What is the admin login?",
+      "answer": "The primary admin account email is l230787@lhr.nu.edu.pk. Admins can also create additional admin accounts from the admin dashboard. Admin users are redirected to the admin panel after login instead of the regular dashboard.",
+      "category": "admin"
+    },
+    {
+      "question": "Can I use the platform without an account?",
+      "answer": "You can browse the Schedules page, Catalogue, Ratings, and Contact page without an account. However, to book a ticket you must be logged in. If you click Book Now without being logged in, you will be redirected to the login page.",
+      "category": "account"
+    },
+    {
+      "question": "What happens if the payment page expires?",
+      "answer": "If your payment window expires (60 minutes normally, 15 minutes for imminent departures), the booking is automatically cancelled by the background job, the seat is released, and your booking status changes to Cancelled. You will need to start a new booking from the Schedules page.",
+      "category": "payment"
+    },
+    {
+      "question": "Is there WiFi on trains?",
+      "answer": "WiFi is currently listed as a future enhancement for the platform. The Tezgam Express is described in the catalogue as offering WiFi and charging ports as part of its business class experience. For current amenity details please check the Catalogue page or contact support.",
+      "category": "trains"
     }
   ]
 }

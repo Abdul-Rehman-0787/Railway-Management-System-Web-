@@ -402,13 +402,18 @@
 
 /* ════════════════ MAIN CHAT CONTAINER ════════════════ */
 .chatgpt-container {
-    height: 100vh;
+    position: fixed;        /* Locks the container to the viewport — page beneath cannot scroll it */
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 100dvh;         /* dvh handles mobile browser chrome better than vh */
     display: flex;
     flex-direction: column;
     background: var(--bg);
     font-family: var(--font);
-    position: relative;
-    overflow: hidden;
+    overflow: hidden;       /* All scrolling happens ONLY inside .chatgpt-messages */
+    z-index: 100;           /* Sits above the main page layout */
 }
 
 .chatgpt-container::before {

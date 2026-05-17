@@ -82,7 +82,8 @@ CREATE TABLE Schedule (
     CONSTRAINT FK_Schedule_DepStn FOREIGN KEY (DepartureStation) REFERENCES Stations(StationID),
     CONSTRAINT FK_Schedule_ArrStn FOREIGN KEY (ArrivalStation) REFERENCES Stations(StationID),
     CONSTRAINT CHK_Stations_Diff CHECK (DepartureStation <> ArrivalStation),
-    CONSTRAINT CHK_Arrival_After CHECK (ArrivalTime > DepartureTime)
+    CONSTRAINT CHK_Arrival_After CHECK (ArrivalTime > DepartureTime),
+    CONSTRAINT CHK_AvailableSeats_NonNegative CHECK (AvailableSeats >= 0)
 );
 
 CREATE TABLE Bookings (
@@ -98,7 +99,9 @@ CREATE TABLE Bookings (
     PaymentExpiry   DATETIME     NULL,
     BookingType     VARCHAR(10)  DEFAULT 'seat',
     CONSTRAINT FK_Bookings_Client FOREIGN KEY (ClientID) REFERENCES Clients(ClientID) ON DELETE CASCADE,
-    CONSTRAINT FK_Bookings_Schedule FOREIGN KEY (ScheduleID) REFERENCES Schedule(ScheduleID)
+    CONSTRAINT FK_Bookings_Schedule FOREIGN KEY (ScheduleID) REFERENCES Schedule(ScheduleID),
+    CONSTRAINT CHK_BookingType CHECK (BookingType IN ('seat', 'berth')),
+    CONSTRAINT CHK_TotalAmount_NonNegative CHECK (TotalAmount >= 0)
 );
 
 CREATE TABLE Payments (
@@ -127,7 +130,7 @@ CREATE TABLE Ratings (
     ClientID    INT          NOT NULL,
     ScheduleID  INT,
     Rating      TINYINT      NOT NULL,
-    Review      TEXT,
+    Review      VARCHAR(MAX),
     RatingDate  DATETIME     DEFAULT GETDATE(),
     CONSTRAINT FK_Ratings_Client FOREIGN KEY (ClientID) REFERENCES Clients(ClientID) ON DELETE CASCADE,
     CONSTRAINT FK_Ratings_Schedule FOREIGN KEY (ScheduleID) REFERENCES Schedule(ScheduleID) ON DELETE SET NULL,
@@ -158,7 +161,7 @@ CREATE TABLE Catalogue (
     CatalogueID   INT IDENTITY(1,1) PRIMARY KEY,
     TrainID       INT          NOT NULL,
     Title         VARCHAR(100) NOT NULL,
-    Description   TEXT,
+    Description   VARCHAR(MAX),
     ImageURL      VARCHAR(255),
     CONSTRAINT FK_Catalogue_Train FOREIGN KEY (TrainID) REFERENCES Trains(TrainID) ON DELETE CASCADE
 );
@@ -185,9 +188,9 @@ CREATE TABLE Conversations (
     UserName        VARCHAR(100) NOT NULL,
     UserEmail       VARCHAR(100) NOT NULL,
     Subject         VARCHAR(200) NOT NULL,
-    UserMessage     TEXT NOT NULL,
+    UserMessage     VARCHAR(MAX) NOT NULL,
     UserMessageDate DATETIME DEFAULT GETDATE(),
-    AdminReply      TEXT NULL,
+    AdminReply      VARCHAR(MAX) NULL,
     AdminReplyDate  DATETIME NULL,
     Status          VARCHAR(20) DEFAULT 'Pending',
     CreatedAt       DATETIME DEFAULT GETDATE(),
@@ -417,7 +420,7 @@ BEGIN
     IF DATEDIFF(HOUR, GETDATE(), @DepartureTime) < 1
         SET @PaymentExpiry = DATEADD(MINUTE, 15, GETDATE());
     ELSE
-        SET @PaymentExpiry = DATEADD(HOUR, 1, GETDATE());
+        SET @PaymentExpiry = DATEADD(HOUR, 3, GETDATE());
 
     INSERT INTO Bookings (ClientID, ScheduleID, SeatNumber, TotalAmount, Status, PaymentStatus, PaymentExpiry, BookingType)
     VALUES (@ClientID, @ScheduleID, @SeatNumber, @Price, 'Pending', 'Pending', @PaymentExpiry, @BookingType);
@@ -453,7 +456,7 @@ BEGIN
         UPDATE Schedule SET AvailableSeats = AvailableSeats + 1 WHERE ScheduleID = @ScheduleID;
         UPDATE Bookings SET Status = 'Cancelled', PaymentStatus = 'Failed' WHERE BookingID = @BookingID;
         SELECT 0 AS Success, 'Payment window expired. Booking cancelled.' AS Message;
-        ROLLBACK; RETURN;
+        COMMIT; RETURN;
     END
     
     UPDATE Bookings SET PaymentStatus = 'Paid', Status = 'Confirmed', PaymentIntentId = @PaymentIntentId, BookingDate = GETDATE()
@@ -667,21 +670,24 @@ GO
 CREATE OR ALTER PROCEDURE sp_CancelExpiredPendingBookings
 AS
 BEGIN
-    DECLARE @BookingID INT, @ScheduleID INT;
-    DECLARE cur CURSOR FOR SELECT BookingID, ScheduleID FROM Bookings WHERE PaymentStatus = 'Pending' AND PaymentExpiry < GETDATE();
-    OPEN cur;
-    FETCH NEXT FROM cur INTO @BookingID, @ScheduleID;
-    WHILE @@FETCH_STATUS = 0
-    BEGIN
-        BEGIN TRANSACTION;
-        UPDATE Schedule SET AvailableSeats = AvailableSeats + 1 WHERE ScheduleID = @ScheduleID;
-        UPDATE Bookings SET Status = 'Cancelled', PaymentStatus = 'Failed' WHERE BookingID = @BookingID;
-        COMMIT;
-        FETCH NEXT FROM cur INTO @BookingID, @ScheduleID;
-    END
-    CLOSE cur;
-    DEALLOCATE cur;
+    SET NOCOUNT ON;
+    BEGIN TRANSACTION;
+
+    UPDATE s
+    SET s.AvailableSeats = s.AvailableSeats + 1
+    FROM Schedule s
+    INNER JOIN Bookings b ON s.ScheduleID = b.ScheduleID
+    WHERE b.PaymentStatus = 'Pending'
+      AND b.PaymentExpiry < GETDATE()
+      AND b.Status <> 'Cancelled';
+
+    UPDATE Bookings
+    SET Status = 'Cancelled', PaymentStatus = 'Failed'
+    WHERE PaymentStatus = 'Pending'
+      AND PaymentExpiry < GETDATE();
+
     SELECT @@ROWCOUNT AS ExpiredCount;
+    COMMIT;
 END
 GO
 
@@ -691,7 +697,7 @@ GO
 
 CREATE OR ALTER PROCEDURE sp_SendUserMessage
     @UserID INT, @UserName VARCHAR(100), @UserEmail VARCHAR(100),
-    @Subject VARCHAR(200), @Message TEXT
+    @Subject VARCHAR(200), @Message VARCHAR(MAX)
 AS
 BEGIN
     IF EXISTS (SELECT 1 FROM Conversations WHERE UserID = @UserID AND Status = 'Pending')
@@ -705,7 +711,7 @@ BEGIN
 END
 GO
 
-CREATE OR ALTER PROCEDURE sp_SendAdminReply @ConversationID INT, @AdminReply TEXT
+CREATE OR ALTER PROCEDURE sp_SendAdminReply @ConversationID INT, @AdminReply VARCHAR(MAX)
 AS
 BEGIN
     IF NOT EXISTS (SELECT 1 FROM Conversations WHERE ConversationID = @ConversationID AND Status = 'Pending')
@@ -720,7 +726,7 @@ BEGIN
 END
 GO
 
-CREATE OR ALTER PROCEDURE sp_SendFollowUpMessage @ConversationID INT, @UserID INT, @NewMessage TEXT
+CREATE OR ALTER PROCEDURE sp_SendFollowUpMessage @ConversationID INT, @UserID INT, @NewMessage VARCHAR(MAX)
 AS
 BEGIN
     IF NOT EXISTS (SELECT 1 FROM Conversations WHERE ConversationID = @ConversationID AND UserID = @UserID AND Status = 'Replied')
@@ -785,8 +791,8 @@ BEGIN
 END
 GO
 
--- Abdul Rehman: Trigger for automatic loyalty points calculation on booking confirmation
-CREATE OR ALTER TRIGGER trg_AbdulRehman_LoyaltyPointsOnBooking ON Bookings AFTER UPDATE
+-- Trigger for automatic loyalty points calculation on booking confirmation
+CREATE OR ALTER TRIGGER trg_LoyaltyPointsOnBooking ON Bookings AFTER UPDATE
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -794,27 +800,33 @@ BEGIN
     IF UPDATE(Status)
     BEGIN
         INSERT INTO RewardTransactions (ClientID, BookingID, PointsChanged, TransactionType)
-        SELECT inserted.ClientID, inserted.BookingID,
-               CASE WHEN inserted.BookingType = 'berth' THEN 20 ELSE 10 END,
+        SELECT i.ClientID, i.BookingID,
+               CASE WHEN i.BookingType = 'berth' THEN 20 ELSE 10 END,
                'Booking Confirmed'
-        FROM inserted
-        WHERE inserted.Status = 'Confirmed' AND (SELECT Status FROM deleted WHERE BookingID = inserted.BookingID) != 'Confirmed';
+        FROM inserted i
+        INNER JOIN deleted d ON i.BookingID = d.BookingID
+        WHERE i.Status = 'Confirmed'
+          AND d.Status <> 'Confirmed';
 
-        -- Update total points in loyalty rewards
         UPDATE lr
-        SET lr.TotalPoints = lr.TotalPoints + rt.PointsChanged,
+        SET lr.TotalPoints = lr.TotalPoints + pts.PointsChanged,
             lr.LastUpdated = GETDATE()
         FROM LoyaltyRewards lr
-        INNER JOIN inserted i ON lr.ClientID = i.ClientID
-        INNER JOIN RewardTransactions rt ON rt.ClientID = i.ClientID AND rt.BookingID = i.BookingID
-        WHERE i.Status = 'Confirmed' AND rt.TransactionType = 'Booking Confirmed'
-        AND rt.TransactionDate >= DATEADD(SECOND, -1, GETDATE()); -- Only recent transactions
+        INNER JOIN (
+            SELECT i.ClientID,
+                   SUM(CASE WHEN i.BookingType = 'berth' THEN 20 ELSE 10 END) AS PointsChanged
+            FROM inserted i
+            INNER JOIN deleted d ON i.BookingID = d.BookingID
+            WHERE i.Status = 'Confirmed'
+              AND d.Status <> 'Confirmed'
+            GROUP BY i.ClientID
+        ) pts ON lr.ClientID = pts.ClientID;
     END
 END
 GO
 
--- Taha: Trigger for conversation status updates and user activity tracking
-CREATE OR ALTER TRIGGER trg_Taha_ConversationStatusUpdate ON Conversations AFTER UPDATE
+-- Trigger for conversation status updates and user activity tracking
+CREATE OR ALTER TRIGGER trg_ConversationStatusUpdate ON Conversations AFTER UPDATE
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -834,8 +846,8 @@ BEGIN
 END
 GO
 
--- Bilal: Trigger for AI interaction logging and conversation archiving
-CREATE OR ALTER TRIGGER trg_Bilal_AIInteractionLogging ON Conversations AFTER INSERT
+-- Trigger for AI interaction logging and conversation archiving
+CREATE OR ALTER TRIGGER trg_AIInteractionLogging ON Conversations AFTER INSERT
 AS
 BEGIN
     SET NOCOUNT ON;
